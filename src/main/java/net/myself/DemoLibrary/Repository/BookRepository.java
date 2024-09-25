@@ -15,4 +15,10 @@ public interface BookRepository extends JpaRepository<Book, Long>
 	List<Book> findByTitleContaining(String title);
 	
 	List<Book> findByTitleAndIsbn(String title, String isbn);
+	
+	List<Book> findByIsbn(String isbn);
+	
+	boolean existsByIsbn(String isbn);
+	
+	void deleteByIsbn(String isbn);
 }
