@@ -13,7 +13,7 @@ public class Book
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long _id;
+	private long id;
 	
 	private String title;
 	private String author;
@@ -22,18 +22,18 @@ public class Book
 	
 	public Book(){}
 	
-	public Book(long _id, String title, String author, String isbn, LocalDate publishedDate)
+	public Book(long id, String title, String author, String isbn, LocalDate publishedDate)
 	{
-		this._id = _id;
+		this.id = id;
 		this.title = title;
 		this.author = author;
 		this.isbn = isbn;
 		this.publishedDate = publishedDate;
 	}
 	
-	public long get_id()
+	public long getId()
 	{
-		return _id;
+		return id;
 	}
 	
 	public String getTitle()

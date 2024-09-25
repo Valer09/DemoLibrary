@@ -42,4 +42,24 @@ public class BookController
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	@DeleteMapping("/{id}")
+	public ResponseEntity<String> deleteBookById(@PathVariable Long id) {
+		if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
+		
+		_bookRepository.deleteById(id);
+		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+	}
+	
+	@DeleteMapping("/delete")
+	public ResponseEntity<String> deleteBook(@RequestBody Book book)
+	{
+		List<Book> books = _bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn());
+		
+		if (books.isEmpty()) return new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
+		else if (books.size() > 1) return new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
+		
+		_bookRepository.delete(books.get(0));
+		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+	}
 }
