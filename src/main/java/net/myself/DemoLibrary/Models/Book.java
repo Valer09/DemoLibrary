@@ -1,4 +1,4 @@
-package Models;
+package net.myself.DemoLibrary.Models;
 
 import org.apache.logging.log4j.util.Strings;
 

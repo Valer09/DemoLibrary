@@ -2,6 +2,8 @@ package net.myself.DemoLibrary;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
 
 /*
 * I bean vengono creati e gestiti dal contenitore di oggetti quando sono annotati con le annotazioni appropriate,
