@@ -29,22 +29,27 @@ public class BookController
 	}
 	
 	@GetMapping("/searchByTitle")
-	public List<Book> searchByTitle(@RequestParam("title") String title) {
+	public List<Book> searchByTitle(@RequestParam("title") String title)
+	{
 		return _bookRepository.findByTitleContaining(title);
 	}
 	
 	@PostMapping
-	public ResponseEntity<Book> addBook(@RequestBody Book book) {
-		try {
+	public ResponseEntity<Book> addBook(@RequestBody Book book)
+	{
+		try
+		{
 			Book savedBook = _bookRepository.save(book);
 			return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	
 	@DeleteMapping("/{id}")
-	public ResponseEntity<String> deleteBookById(@PathVariable Long id) {
+	public ResponseEntity<String> deleteBookById(@PathVariable Long id)
+	{
 		if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
 		
 		_bookRepository.deleteById(id);
