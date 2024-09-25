@@ -10,7 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
+
+//TODO: Create ErrorResponse class. Then implements @ControllerAdvice. Use Optional
 @RestController
 @RequestMapping("/books")
 public class BookController
@@ -45,11 +48,15 @@ public class BookController
 	@PostMapping
 	public ResponseEntity<Book> addBook(@RequestBody Book book)
 	{
+		
+		if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+		
 		try
 		{
 			Book savedBook = _bookRepository.save(book);
 			return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}

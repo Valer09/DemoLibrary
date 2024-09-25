@@ -1,9 +1,7 @@
 package net.myself.DemoLibrary.Data.Entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -14,10 +12,10 @@ public class Book
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	
+	@Column(nullable = false, unique = true)
+	private String isbn;
 	private String title;
 	private String author;
-	private String isbn;
 	private LocalDate publishedDate;
 	
 	public Book(){}
