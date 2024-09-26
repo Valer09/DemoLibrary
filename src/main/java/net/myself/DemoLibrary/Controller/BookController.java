@@ -46,7 +46,7 @@ public class BookController
 	@PostMapping
 	public ResponseEntity<Book> addBook(@RequestBody Book book)
 	{
-		if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+		//if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
 		Book savedBook = _bookRepository.save(book);
 		return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
 	}
