@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BookRepository extends JpaRepository<Book, Long>
+public interface IBookRepository extends JpaRepository<Book, Long>
 {
 	//define custom query
 	List<Book> findByTitle(String title);

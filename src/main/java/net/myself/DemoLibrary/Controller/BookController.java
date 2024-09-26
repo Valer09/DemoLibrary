@@ -3,7 +3,10 @@ package net.myself.DemoLibrary.Controller;
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
-import net.myself.DemoLibrary.Repository.BookRepository;
+import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
+import net.myself.DemoLibrary.Repository.IBookRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +17,9 @@ import java.util.List;
 @RequestMapping("/books")
 public class BookController
 {
+	private static final Logger _logger = LoggerFactory.getLogger(GlobalControllerExceptionHandler.class);
 	@Autowired
-	BookRepository _bookRepository;
+	IBookRepository _bookRepository;
 	
 	@GetMapping
 	public ResponseEntity<List<Book>> getAllBooks()
@@ -46,7 +50,7 @@ public class BookController
 	@PostMapping
 	public ResponseEntity<Book> addBook(@RequestBody Book book)
 	{
-		//if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+		if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
 		Book savedBook = _bookRepository.save(book);
 		return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
 	}
@@ -65,6 +69,7 @@ public class BookController
 	{
 		if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
 		_bookRepository.deleteById(id);
+		_logger.trace("deleted object book with id "+id);
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
@@ -78,6 +83,7 @@ public class BookController
 		else if (books.size() > 1) return new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
 			
 		_bookRepository.delete(books.get(0));
+		_logger.trace("deleted object book with id "+book.getId());
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
