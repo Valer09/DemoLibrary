@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-//TODO: Create ErrorResponse class. Then implements @ControllerAdvice. Use Optional
+//TODO: Create ErrorResponse class. Then implements @ControllerAdvice.
 @RestController
 @RequestMapping("/books")
 public class BookController
