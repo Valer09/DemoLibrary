@@ -61,6 +61,7 @@ public class BookController
 	{
 		if (!_bookRepository.existsByIsbn(isbn)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
 		_bookRepository.deleteByIsbn(isbn);
+		_logger.trace("deleted object book with isbn "+isbn);
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
