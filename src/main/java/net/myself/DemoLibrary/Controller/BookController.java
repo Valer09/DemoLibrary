@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Repository.BookRepository;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,27 +23,50 @@ public class BookController
 	BookRepository _bookRepository;
 	
 	@GetMapping
-	public List<Book> getAllBooks()
+	public ResponseEntity<List<Book>> getAllBooks()
 	{
-		return _bookRepository.findAll();
+		try
+		{
+			return new ResponseEntity<>(_bookRepository.findAll(), HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@GetMapping("/findByIsbn")
-	public List<Book> findByIsbn(@RequestParam("isbn") String isbn)
+	public ResponseEntity<Book> findByIsbn(@RequestParam("isbn") String isbn)
 	{
-		return _bookRepository.findByIsbn(isbn);
+		return _bookRepository.findByIsbn(isbn)
+						.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
+						.orElse(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 	}
 	
 	@GetMapping("/findByTitle")
-	public List<Book> findByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<Book>> findByTitle(@RequestParam("title") String title)
 	{
-		return _bookRepository.findByTitle(title);
+		try
+		{
+			return new ResponseEntity<>(_bookRepository.findByTitle(title), HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@GetMapping("/searchByTitle")
-	public List<Book> searchByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<Book>> searchByTitle(@RequestParam("title") String title)
 	{
-		return _bookRepository.findByTitleContaining(title);
+		try
+		{
+			return new ResponseEntity<>(_bookRepository.findByTitleContaining(title), HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@PostMapping
@@ -66,32 +90,51 @@ public class BookController
 	@DeleteMapping("/isbn/{isbn}")
 	public ResponseEntity<String> deleteBookByIsbn(@PathVariable String isbn)
 	{
-		if (!_bookRepository.existsByIsbn(isbn)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
-		if(_bookRepository.findByIsbn(isbn).size() > 1) return new ResponseEntity<>("Server error", HttpStatus.CONFLICT);
-		
-		_bookRepository.deleteByIsbn(isbn);
-		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		try
+		{
+			if (!_bookRepository.existsByIsbn(isbn)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
+			_bookRepository.deleteByIsbn(isbn);
+			return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteBookById(@PathVariable Long id)
 	{
-		if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
-		
-		_bookRepository.deleteById(id);
-		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		try
+		{
+			if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
+			
+			_bookRepository.deleteById(id);
+			return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@DeleteMapping("/delete")
 	public ResponseEntity<String> deleteBook(@RequestBody Book book)
 	{
-		List<Book> books = _bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn());
-		
-		if (books.isEmpty()) return new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
-		else if (books.size() > 1) return new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
-		
-		_bookRepository.delete(books.get(0));
-		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		try
+		{
+			List<Book> books = _bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn());
+			
+			if (books.isEmpty()) return new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
+			else if (books.size() > 1) return new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
+			
+			_bookRepository.delete(books.get(0));
+			return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 	@PutMapping("/update")
