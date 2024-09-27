@@ -1,4 +1,4 @@
-package net.myself.DemoLibrary.Repository;
+package net.myself.DemoLibrary.Data.Repository;
 
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.springframework.data.jpa.repository.JpaRepository;

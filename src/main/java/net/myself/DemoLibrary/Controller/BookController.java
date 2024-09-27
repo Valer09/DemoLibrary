@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
-import net.myself.DemoLibrary.Repository.IBookRepository;
+import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+//TODO: use services and approach to transactions there
 @RestController
 @RequestMapping("/books")
 public class BookController
@@ -47,12 +48,12 @@ public class BookController
 		return new ResponseEntity<>(_bookRepository.findByTitleContaining(title), HttpStatus.OK);
 	}
 	
+	@Transactional
 	@PostMapping
 	public ResponseEntity<Book> addBook(@RequestBody Book book)
 	{
 		if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
-		Book savedBook = _bookRepository.save(book);
-		return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
+		return new ResponseEntity<>(_bookRepository.save(book), HttpStatus.CREATED);
 	}
 	
 	@Transactional
@@ -65,6 +66,7 @@ public class BookController
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
+	@Transactional
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteBookById(@PathVariable Long id)
 	{
@@ -74,6 +76,7 @@ public class BookController
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
+	@Transactional
 	@DeleteMapping("/delete")
 	public ResponseEntity<String> deleteBook(@RequestBody Book book)
 	{
@@ -88,6 +91,7 @@ public class BookController
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
+	@Transactional
 	@PutMapping("/update")
 	public ResponseEntity<Book> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
 	{

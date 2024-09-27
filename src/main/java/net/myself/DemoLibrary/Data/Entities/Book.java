@@ -1,5 +1,7 @@
 package net.myself.DemoLibrary.Data.Entities;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
 
@@ -80,5 +82,19 @@ public class Book
 	private void setPublishedDate(LocalDate publishedDate)
 	{
 		this.publishedDate = publishedDate;
+	}
+	
+	public int hashCode() {
+		return getClass().hashCode();
+	}
+	
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		
+		if  ( obj == null || getClass() != obj.getClass() ) return false;
+		Book other = (Book) obj;
+		
+		return id >=0 &&
+						id == (other.getId());
 	}
 }
