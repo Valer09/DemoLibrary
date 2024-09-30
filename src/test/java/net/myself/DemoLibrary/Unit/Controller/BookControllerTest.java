@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -73,38 +74,49 @@ class BookControllerTest
 			Assertions.assertThat(b.getTitle()).isEqualTo(bookList.get(i).getTitle());
 			Assertions.assertThat(b.getAuthor()).isEqualTo(bookList.get(i).getAuthor());
 		}
+		
+		verify(bookRepository, times(1)).findAll();
 	}
 	
 	@Test
 	void findByIsbn() throws Exception
 	{
-		when(bookRepository.findByIsbn("abcd")).thenReturn(Optional.of(new Book(1,"test","test","abcd",LocalDate.now())));
-		mockMvc.perform(BookControllerRequestMap.findByIbsn())
+		String isbn = "abcd";
+		
+		when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(new Book(1,"test","test", isbn,LocalDate.now())));
+		
+		var x = mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
-						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value("abcd"));
+						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
+		
+		verify(bookRepository, times(1)).findByIsbn(isbn);
 	}
 	
 	@Test
 	void findByTitle() throws Exception
 	{
+		String title = "title";
 		List<Book> books = new ArrayList<>(Arrays.asList
 						(
-										new Book(1,"title","author","abcd",LocalDate.now()),
-										new Book(1,"title","author","zxy",LocalDate.now())
+										new Book(1, title,"author","abcd",LocalDate.now()),
+										new Book(1, title,"author","zxy",LocalDate.now())
 						));
 		
-		when(bookRepository.findByTitle("title")).thenReturn(books);
+		when(bookRepository.findByTitle(title)).thenReturn(books);
 		
-		mockMvc.perform(BookControllerRequestMap.findByTitle())
+		mockMvc.perform(BookControllerRequestMap.findByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("title"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value("title"));
+						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
+						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value(title));
+		
+		verify(bookRepository, times(1)).findByTitle(title);
 	}
 	
 	@Test
 	void searchByTitle() throws Exception
 	{
+		String title = "title";
 		List<Book> books = new ArrayList<>(Arrays.asList
 						(
 										new Book(1,"title","author","abcd",LocalDate.now()),
@@ -112,14 +124,16 @@ class BookControllerTest
 										new Book(1,"containsTitle","author","zxy",LocalDate.now())
 						));
 		
-		when(bookRepository.findByTitle("title")).thenReturn(books);
+		when(bookRepository.findByTitleContaining("title")).thenReturn(books);
 		
-		mockMvc.perform(BookControllerRequestMap.findByTitle())
+		mockMvc.perform(BookControllerRequestMap.searchByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("title"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value("title"))
+						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
+						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value(title))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[2].title").value("containsTitle"));
+		
+		verify(bookRepository, times(1)).findByTitleContaining(title);
 	}
 	
 	@Test
@@ -145,6 +159,8 @@ class BookControllerTest
 		Assertions.assertThat(addedBook.getAuthor()).isEqualTo(book.getAuthor());
 		Assertions.assertThat(addedBook.getIsbn()).isEqualTo(book.getIsbn());
 		Assertions.assertThat(addedBook.getPublishedDate()).isEqualTo(book.getPublishedDate());
+		
+		verify(bookRepository, times(1)).save(book);
 	}
 	
 	@Test
@@ -159,7 +175,7 @@ class BookControllerTest
 						.andDo(print())
 						.andExpect(status().isOk());
 		
-		verify(bookRepository).deleteByIsbn(book.getIsbn());
+		verify(bookRepository, times(1)).deleteByIsbn(book.getIsbn());
 	}
 	
 	@Test
@@ -173,6 +189,7 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book))
 						.andDo(print())
 						.andExpect(status().isNotFound());
+		
 		verify(bookRepository, never()).deleteByIsbn(book.getIsbn());
 	}
 	
@@ -187,7 +204,8 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
 						.andDo(print())
 						.andExpect(status().isOk());
-		verify(bookRepository).deleteById(book.getId());
+		
+		verify(bookRepository, times(1)).deleteById(book.getId());
 	}
 	
 	@Test
@@ -201,6 +219,7 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
 						.andDo(print())
 						.andExpect(status().isNotFound());
+		
 		verify(bookRepository, never()).deleteById(book.getId());
 	}
 	
@@ -217,7 +236,8 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isOk());
-		verify(bookRepository).delete(book);
+		
+		verify(bookRepository, times(1)).delete(book);
 	}
 	
 	@Test
@@ -233,6 +253,7 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isConflict());
+		
 		verify(bookRepository, never()).delete(book);
 	}
 	
@@ -249,6 +270,7 @@ class BookControllerTest
 		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isNotFound());
+		
 		verify(bookRepository, never()).delete(book);
 	}
 	
@@ -286,7 +308,7 @@ class BookControllerTest
 		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(newBook.getIsbn());
 		Assertions.assertThat(updatedBook.getPublishedDate()).isEqualTo(newBook.getPublishedDate());
 		
-		verify(bookRepository).save(book);
+		verify(bookRepository, times(1)).save(book);
 	}
 	
 	@Test

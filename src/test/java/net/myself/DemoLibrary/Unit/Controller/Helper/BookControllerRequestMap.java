@@ -13,24 +13,18 @@ public class BookControllerRequestMap
 {
 	private static final String basePath = "/books";
 	
-	public static MockHttpServletRequestBuilder getAllBooks()	{	return get(basePath).contentType(MediaType.APPLICATION_JSON);	}
-	public static RequestBuilder findByIbsn() {return get(buildPath("findByIsbn")).contentType(MediaType.APPLICATION_JSON).param("isbn", "abcd");}
-	public static MockHttpServletRequestBuilder findByTitle(){ return get(buildPath("findByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", "title");}
-	public static RequestBuilder addBook(String jsonBook){return post(basePath).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);	}
-	public static RequestBuilder deleteBookByIsbn(Book book){return delete(buildPath("isbn/{isbn}"), book.getIsbn()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);}
-	public static RequestBuilder deleteBookById(Book book)	{return delete(buildPath("{id}"), book.getId()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);	}
-	public static RequestBuilder updateBook(String jsonBook){return put(buildPath("update")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
+	public static MockHttpServletRequestBuilder getAllBooks()	{return get(basePath).contentType(MediaType.APPLICATION_JSON);}
+	public static RequestBuilder findByIbsn(String isbn) {return get(buildPath("findByIsbn")).contentType(MediaType.APPLICATION_JSON).param("isbn", isbn);}
+	public static MockHttpServletRequestBuilder findByTitle(String title) {return get(buildPath("findByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", title);}
+	public static RequestBuilder addBook(String jsonBook) {return post(basePath).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
+	public static RequestBuilder deleteBookByIsbn(Book book) {return delete(buildPath("isbn/{isbn}"), book.getIsbn()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);}
+	public static RequestBuilder deleteBookById(Book book) {return delete(buildPath("{id}"), book.getId()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);}
+	public static RequestBuilder updateBook(String jsonBook) {return put(buildPath("update")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
+	public static RequestBuilder searchByTitle(String title) {return get(buildPath("searchByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", title);}
+	public static RequestBuilder deleteBook(String jsonBook){return delete(buildPath("delete")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
 	
 	private static String buildPath(String path)
 	{
 		return MessageFormat.format("{0}/{1}", basePath, path);
-	}
-	
-	public static RequestBuilder deleteBook(String jsonBook)
-	{
-		return delete(buildPath("delete"))
-						.contentType(MediaType.APPLICATION_JSON)
-						.accept(MediaType.APPLICATION_JSON)
-						.content(jsonBook);
 	}
 }
