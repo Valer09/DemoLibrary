@@ -1,48 +1,35 @@
 package net.myself.DemoLibrary.Unit.Controller;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.JacksonConfig;
-import org.hamcrest.Matchers;
+import net.myself.DemoLibrary.Unit.Controller.Helper.BookControllerRequestMap;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import static net.bytebuddy.matcher.ElementMatchers.is;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 //TODO: Bonus tip use @WebMvcTest and @MockBean instead of what you are doing now. Aggiungere i verify. Refactoring per duplicazione
 class BookControllerTest
 {
-	private static final String basePath = "/books";
 	private ObjectMapper jackson;
 	@Autowired
 	private MockMvc mockMvc;
@@ -63,8 +50,8 @@ class BookControllerTest
 	
 	
 	@Test
-	void checkJacksonConfiguration() throws Exception {
-		System.out.println(jackson.getRegisteredModuleIds());
+	void checkJacksonConfiguration() throws Exception
+	{
 		assertTrue(jackson.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
 	}
 	
@@ -80,7 +67,7 @@ class BookControllerTest
 		
 		when(bookRepository.findAll()).thenReturn(bookList);
 		
-		mockMvc.perform(get(basePath).contentType(MediaType.APPLICATION_JSON))
+		mockMvc.perform(BookControllerRequestMap.getAllBooks())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(4)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(bookId))
@@ -105,7 +92,7 @@ class BookControllerTest
 	void findByIsbn() throws Exception
 	{
 		when(bookRepository.findByIsbn("abcd")).thenReturn(Optional.of(new Book(1,"test","test","abcd",LocalDate.now())));
-		mockMvc.perform(get(buildPath("findByIsbn")).contentType(MediaType.APPLICATION_JSON).param("isbn", "abcd"))
+		mockMvc.perform(BookControllerRequestMap.findByIbsn())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value("abcd"));
 	}
@@ -121,7 +108,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitle("title")).thenReturn(books);
 		
-		mockMvc.perform(get(buildPath("findByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", "title"))
+		mockMvc.perform(BookControllerRequestMap.findByTitle())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("title"))
@@ -140,7 +127,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitle("title")).thenReturn(books);
 		
-		mockMvc.perform(get(buildPath("findByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", "title"))
+		mockMvc.perform(BookControllerRequestMap.findByTitle())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("title"))
@@ -159,10 +146,7 @@ class BookControllerTest
 		
 		when(bookRepository.save(book)).thenReturn(book);
 		
-		mockMvc.perform(post(basePath)
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonBook))
+		mockMvc.perform(BookControllerRequestMap.addBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isCreated())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.title").value("title"))
@@ -181,9 +165,7 @@ class BookControllerTest
 		
 		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(true);
 		
-		mockMvc.perform(delete(buildPath("isbn/{isbn}"), book.getIsbn())
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book))
 						.andDo(print())
 						.andExpect(status().isOk());
 		
@@ -198,9 +180,7 @@ class BookControllerTest
 		
 		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(false);
 		
-		mockMvc.perform(delete(buildPath("isbn/{isbn}"), book.getIsbn())
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book))
 						.andDo(print())
 						.andExpect(status().isNotFound());
 		verify(bookRepository, never()).deleteByIsbn(book.getIsbn());
@@ -214,9 +194,7 @@ class BookControllerTest
 		
 		when(bookRepository.existsById(book.getId())).thenReturn(true);
 		
-		mockMvc.perform(delete(buildPath("{id}"), book.getId())
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
 						.andDo(print())
 						.andExpect(status().isOk());
 		verify(bookRepository).deleteById(book.getId());
@@ -230,9 +208,7 @@ class BookControllerTest
 		
 		when(bookRepository.existsById(book.getId())).thenReturn(false);
 		
-		mockMvc.perform(delete(buildPath("{id}"), book.getId())
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
 						.andDo(print())
 						.andExpect(status().isNotFound());
 		verify(bookRepository, never()).deleteById(book.getId());
@@ -248,10 +224,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
-		mockMvc.perform(delete(buildPath("delete"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonBook))
+		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isOk());
 		verify(bookRepository).delete(book);
@@ -267,10 +240,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
-		mockMvc.perform(delete(buildPath("delete"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonBook))
+		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isConflict());
 		verify(bookRepository, never()).delete(book);
@@ -286,10 +256,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>());
 		
-		mockMvc.perform(delete(buildPath("delete"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonBook))
+		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isNotFound());
 		verify(bookRepository, never()).delete(book);
@@ -303,14 +270,9 @@ class BookControllerTest
 		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		String jsonNto = jackson.writeValueAsString(nto);
-		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
-		mockMvc.perform(put(buildPath("update"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonNto))
+		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
 						.andDo(print())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.title").value(newBook.getTitle()))
@@ -331,14 +293,9 @@ class BookControllerTest
 		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		String jsonNto = jackson.writeValueAsString(nto);
-		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
-		mockMvc.perform(put(buildPath("update"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonNto))
+		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
 						.andDo(print())
 						.andExpect(status().isConflict());
 		
@@ -353,22 +310,13 @@ class BookControllerTest
 		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		String jsonNto = jackson.writeValueAsString(nto);
-		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
 		
-		mockMvc.perform(put(buildPath("update"))
-										.contentType(MediaType.APPLICATION_JSON)
-										.accept(MediaType.APPLICATION_JSON)
-										.content(jsonNto))
+		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
 						.andDo(print())
 						.andExpect(status().isNotFound());
 		
 		verify(bookRepository, never()).save(book);
 	}
 	
-	private String buildPath(String path)
-	{
-		return MessageFormat.format("{0}/{1}", basePath, path);
-	}
 }
