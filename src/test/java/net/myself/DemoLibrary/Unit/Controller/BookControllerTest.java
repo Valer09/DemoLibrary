@@ -16,20 +16,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-//TODO: Aggiungere i verify. Refactoring per duplicazione
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(BookController.class)
@@ -51,12 +49,11 @@ class BookControllerTest
 	@Test
 	void getAllBooks() throws Exception
 	{
-		Long bookId = 1L;
 		List<Book> bookList = new ArrayList<>(Arrays.asList(
-						new Book(bookId, "Test Book", "Author",  "123455", LocalDate.now()),
-						new Book(bookId+1, "Test Book1", "Author1",  "123456", LocalDate.now()),
-						new Book(bookId+2, "Test Book2", "Author2",  "123457", LocalDate.now()),
-						new Book(bookId+3, "Test Book3", "Author3",  "123458", LocalDate.now())));
+						getRandomBook(),
+						getRandomBook(),
+						getRandomBook(),
+						getRandomBook()));
 		
 		when(bookRepository.findAll()).thenReturn(bookList);
 		
@@ -65,11 +62,12 @@ class BookControllerTest
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(4)))
 						.andReturn();
 		
+		// Serialize the response and using Assertions.[...]. For an example of direct access and assertions on json response fields values, look findByIsbn test
 		List<Book> response = jackson.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
 		for(int i = 0; i < response.size(); i++)
 		{
 			Book b = response.get(i);
-			Assertions.assertThat(b.getId()).isEqualTo(bookId+i);
+			Assertions.assertThat(b.getId()).isEqualTo(bookList.get(i).getId());
 			Assertions.assertThat(b.getIsbn()).isEqualTo(bookList.get(i).getIsbn());
 			Assertions.assertThat(b.getTitle()).isEqualTo(bookList.get(i).getTitle());
 			Assertions.assertThat(b.getAuthor()).isEqualTo(bookList.get(i).getAuthor());
@@ -85,7 +83,7 @@ class BookControllerTest
 		
 		when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(new Book(1,"test","test", isbn,LocalDate.now())));
 		
-		var x = mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
+		mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
 		
@@ -116,15 +114,15 @@ class BookControllerTest
 	@Test
 	void searchByTitle() throws Exception
 	{
-		String title = "title";
+		String title = "Title";
 		List<Book> books = new ArrayList<>(Arrays.asList
 						(
-										new Book(1,"title","author","abcd",LocalDate.now()),
-										new Book(1,"title","author","zxy",LocalDate.now()),
-										new Book(1,"containsTitle","author","zxy",LocalDate.now())
+							new Book(1,title,"author","abcd",LocalDate.now()),
+							new Book(1,title,"author","zxy",LocalDate.now()),
+							new Book(1,"contains"+title,"author2","zxy",LocalDate.now())
 						));
 		
-		when(bookRepository.findByTitleContaining("title")).thenReturn(books);
+		when(bookRepository.findByTitleContaining(title)).thenReturn(books);
 		
 		mockMvc.perform(BookControllerRequestMap.searchByTitle(title))
 						.andExpect(status().isOk())
@@ -139,16 +137,11 @@ class BookControllerTest
 	@Test
 	void addBook() throws Exception
 	{
+		Book book = getRandomBook();
 		
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		
-		String jsonBook = jackson.writeValueAsString(book);
-		System.out.println(jsonBook);
-		System.out.println(jackson.writeValueAsString(now));
 		when(bookRepository.save(book)).thenReturn(book);
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.addBook(jsonBook))
+		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.addBook(jackson.writeValueAsString(book)))
 						.andDo(print())
 						.andExpect(status().isCreated())
 						.andReturn();
@@ -166,14 +159,11 @@ class BookControllerTest
 	@Test
 	void deleteBookByIsbn() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
+		Book book = getRandomBook();
 		
 		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(true);
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book))
-						.andDo(print())
-						.andExpect(status().isOk());
+		performDeleteByIsbn(book).andExpect(status().isOk());
 		
 		verify(bookRepository, times(1)).deleteByIsbn(book.getIsbn());
 	}
@@ -181,14 +171,11 @@ class BookControllerTest
 	@Test
 	void deleteBookByIsbnNotFound() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
+		Book book = getRandomBook();
 		
 		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(false);
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book))
-						.andDo(print())
-						.andExpect(status().isNotFound());
+		performDeleteByIsbn(book).andExpect(status().isNotFound());
 		
 		verify(bookRepository, never()).deleteByIsbn(book.getIsbn());
 	}
@@ -196,14 +183,11 @@ class BookControllerTest
 	@Test
 	void deleteBookById() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
+		Book book = getRandomBook();
 		
 		when(bookRepository.existsById(book.getId())).thenReturn(true);
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
-						.andDo(print())
-						.andExpect(status().isOk());
+		performDeleteById(book).andExpect(status().isOk());
 		
 		verify(bookRepository, times(1)).deleteById(book.getId());
 	}
@@ -211,14 +195,11 @@ class BookControllerTest
 	@Test
 	void deleteBookByIdNotFound() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
+		Book book = getRandomBook();
 		
 		when(bookRepository.existsById(book.getId())).thenReturn(false);
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBookById(book))
-						.andDo(print())
-						.andExpect(status().isNotFound());
+		performDeleteById(book).andExpect(status().isNotFound());
 		
 		verify(bookRepository, never()).deleteById(book.getId());
 	}
@@ -226,16 +207,13 @@ class BookControllerTest
 	@Test
 	void deleteBook() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
+		Book book = getRandomBook();
 		
 		String jsonBook = jackson.writeValueAsString(book);
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
-						.andDo(print())
-						.andExpect(status().isOk());
+		performDeleteBook(jsonBook).andExpect(status().isOk());
 		
 		verify(bookRepository, times(1)).delete(book);
 	}
@@ -243,16 +221,11 @@ class BookControllerTest
 	@Test
 	void deleteBookConflict() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		
-		String jsonBook = jackson.writeValueAsString(book);
+		Book book = getRandomBook();
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
-						.andDo(print())
-						.andExpect(status().isConflict());
+		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isConflict());
 		
 		verify(bookRepository, never()).delete(book);
 	}
@@ -260,16 +233,11 @@ class BookControllerTest
 	@Test
 	void deleteBookNotFound() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		
-		String jsonBook = jackson.writeValueAsString(book);
+		Book book = getRandomBook();
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>());
 		
-		mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook))
-						.andDo(print())
-						.andExpect(status().isNotFound());
+		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isNotFound());
 		
 		verify(bookRepository, never()).delete(book);
 	}
@@ -277,29 +245,12 @@ class BookControllerTest
 	@Test
 	void updateBook() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
+		Book book = getRandomBook();
+		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
-		//Directly reading json
-		/*mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
-						.andDo(print())
-						.andExpect(status().isOk())
-						.andExpect(MockMvcResultMatchers.jsonPath("$.title").value(newBook.getTitle()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.author").value(newBook.getAuthor()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(newBook.getIsbn()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[0]").value(newBook.getPublishedDate().getYear()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[1]").value(newBook.getPublishedDate().getMonthValue()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[2]").value(newBook.getPublishedDate().getDayOfMonth()));*/
-		
-		//Serialize the response and using Assertions.[...]
-		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
-						.andDo(print())
-						.andExpect(status().isOk())
-						.andReturn();
+		MvcResult mvcResult = performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isOk()).andReturn();
 		
 		Book updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), Book.class);
 		
@@ -314,16 +265,12 @@ class BookControllerTest
 	@Test
 	void updateBookConflict() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
+		Book book = getRandomBook();
+		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
-		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
-						.andDo(print())
-						.andExpect(status().isConflict());
+		performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isConflict());
 		
 		verify(bookRepository, never()).save(book);
 	}
@@ -331,18 +278,51 @@ class BookControllerTest
 	@Test
 	void updateBookNotFound() throws Exception
 	{
-		LocalDate now = LocalDate.now();
-		Book book = new Book(1, "title", "author", "isbn-0000", now);
-		Book newBook = new Book(1, "newtitle", "newauthor", "isbn-0000new", now);
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
+		Book book = getRandomBook();
+		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
 		
-		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
-						.andDo(print())
-						.andExpect(status().isNotFound());
+		performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isNotFound());
 		
 		verify(bookRepository, never()).save(book);
 	}
 	
+	private ResultActions performDeleteByIsbn(Book book) throws Exception
+	{
+		return mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book)).andDo(print());
+	}
+	
+	private ResultActions performDeleteById(Book book) throws Exception
+	{
+		return mockMvc.perform(BookControllerRequestMap.deleteBookById(book)).andDo(print());
+	}
+	
+	private ResultActions performDeleteBook(String jsonBook) throws Exception
+	{
+		return mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook)).andDo(print());
+	}
+	
+	private ResultActions performUpdate(BookUpdateNto nto) throws Exception
+	{
+		return mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
+	}
+	
+	private String getRandomString()
+	{
+		int leftLimit = 97;
+		int rightLimit = 122;
+		int targetStringLength = 10;
+		Random random = new Random();
+		
+		return random.ints(leftLimit, rightLimit + 1)
+						.limit(targetStringLength)
+						.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+						.toString();
+	}
+	
+	private Book getRandomBook()
+	{
+		return new Book(new Random().nextInt(100), getRandomString(), getRandomString(), getRandomString(), LocalDate.now());
+	}
 }
