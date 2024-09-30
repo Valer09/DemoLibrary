@@ -7,6 +7,10 @@ import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookControllerRequestMap;
+import net.myself.DemoLibrary.Helper.BookHelper;
+import net.myself.DemoLibrary.Service.BookService;
+import net.myself.DemoLibrary.Service.ServiceResponse;
+import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,17 +42,19 @@ class BookControllerTest
 	private MockMvc mockMvc;
 	@MockBean
 	private IBookRepository bookRepository;
+	@MockBean
+	private BookService bookService;
 	
 	@Test
 	void getAllBooks() throws Exception
 	{
 		List<Book> bookList = new ArrayList<>(Arrays.asList(
-						getRandomBook(),
-						getRandomBook(),
-						getRandomBook(),
-						getRandomBook()));
+						BookHelper.getRandomBook(),
+						BookHelper.getRandomBook(),
+						BookHelper.	getRandomBook(),
+						BookHelper.	getRandomBook()));
 		
-		when(bookRepository.findAll()).thenReturn(bookList);
+		when(bookService.getAllBooks()).thenReturn(bookList);
 		
 		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.getAllBooks())
 						.andExpect(status().isOk())
@@ -66,7 +72,7 @@ class BookControllerTest
 			Assertions.assertThat(b.getAuthor()).isEqualTo(bookList.get(i).getAuthor());
 		}
 		
-		verify(bookRepository, times(1)).findAll();
+		verify(bookService, times(1)).getAllBooks();
 	}
 	
 	@Test
@@ -74,13 +80,13 @@ class BookControllerTest
 	{
 		String isbn = "abcd";
 		
-		when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.of(new Book(1,"test","test", isbn,LocalDate.now())));
+		when(bookService.findByIsbn(isbn)).thenReturn(Optional.of(new Book(1,"test","test", isbn,LocalDate.now())));
 		
 		mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
 		
-		verify(bookRepository, times(1)).findByIsbn(isbn);
+		verify(bookService, times(1)).findByIsbn(isbn);
 	}
 	
 	@Test
@@ -93,7 +99,7 @@ class BookControllerTest
 										new Book(1, title,"author","zxy",LocalDate.now())
 						));
 		
-		when(bookRepository.findByTitle(title)).thenReturn(books);
+		when(bookService.findByTitle(title)).thenReturn(books);
 		
 		mockMvc.perform(BookControllerRequestMap.findByTitle(title))
 						.andExpect(status().isOk())
@@ -101,7 +107,7 @@ class BookControllerTest
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value(title));
 		
-		verify(bookRepository, times(1)).findByTitle(title);
+		verify(bookService, times(1)).findByTitle(title);
 	}
 	
 	@Test
@@ -115,7 +121,7 @@ class BookControllerTest
 							new Book(1,"contains"+title,"author2","zxy",LocalDate.now())
 						));
 		
-		when(bookRepository.findByTitleContaining(title)).thenReturn(books);
+		when(bookService.findByTitleContaining(title)).thenReturn(books);
 		
 		mockMvc.perform(BookControllerRequestMap.searchByTitle(title))
 						.andExpect(status().isOk())
@@ -124,15 +130,15 @@ class BookControllerTest
 						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value(title))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[2].title").value("containsTitle"));
 		
-		verify(bookRepository, times(1)).findByTitleContaining(title);
+		verify(bookService, times(1)).findByTitleContaining(title);
 	}
 	
 	@Test
 	void addBook() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.save(book)).thenReturn(book);
+		when(bookService.addBook(book)).thenReturn(ServiceResponse.createOk(book));
 		
 		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.addBook(jackson.writeValueAsString(book)))
 						.andDo(print())
@@ -146,104 +152,105 @@ class BookControllerTest
 		Assertions.assertThat(addedBook.getIsbn()).isEqualTo(book.getIsbn());
 		Assertions.assertThat(addedBook.getPublishedDate()).isEqualTo(book.getPublishedDate());
 		
-		verify(bookRepository, times(1)).save(book);
+		verify(bookService, times(1)).addBook(book);
 	}
 	
 	@Test
 	void deleteBookByIsbn() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(true);
+		when(bookService.deleteBookByIsbn(book.getIsbn())).thenReturn(ServiceResponse.createOk(""));
 		
 		performDeleteByIsbn(book).andExpect(status().isOk());
 		
-		verify(bookRepository, times(1)).deleteByIsbn(book.getIsbn());
+		verify(bookService, times(1)).deleteBookByIsbn(book.getIsbn());
 	}
 	
 	@Test
 	void deleteBookByIsbnNotFound() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.existsByIsbn(book.getIsbn())).thenReturn(false);
+		when(bookService.deleteBookByIsbn(book.getIsbn())).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
 		performDeleteByIsbn(book).andExpect(status().isNotFound());
 		
-		verify(bookRepository, never()).deleteByIsbn(book.getIsbn());
+		verify(bookService, times(1)).deleteBookByIsbn(book.getIsbn());
 	}
 	
 	@Test
 	void deleteBookById() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.existsById(book.getId())).thenReturn(true);
+		when(bookService.deleteBookById(book.getId())).thenReturn(ServiceResponse.createOk(""));
 		
 		performDeleteById(book).andExpect(status().isOk());
 		
-		verify(bookRepository, times(1)).deleteById(book.getId());
+		verify(bookService, times(1)).deleteBookById(book.getId());
 	}
 	
 	@Test
 	void deleteBookByIdNotFound() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.existsById(book.getId())).thenReturn(false);
+		when(bookService.deleteBookById(book.getId())).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
 		performDeleteById(book).andExpect(status().isNotFound());
 		
-		verify(bookRepository, never()).deleteById(book.getId());
+		verify(bookService, times(1)).deleteBookById(book.getId());
 	}
 	
 	@Test
 	void deleteBook() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
 		String jsonBook = jackson.writeValueAsString(book);
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
+		when(bookService.deleteBook(book)).thenReturn(ServiceResponse.createOk(""));
 		
 		performDeleteBook(jsonBook).andExpect(status().isOk());
 		
-		verify(bookRepository, times(1)).delete(book);
+		verify(bookService, times(1)).deleteBook(book);
 	}
 	
 	@Test
 	void deleteBookConflict() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
+		when(bookService.deleteBook(book)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT,""));
 		
 		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isConflict());
 		
-		verify(bookRepository, never()).delete(book);
+		verify(bookService, times(1)).deleteBook(book);
 	}
 	
 	@Test
 	void deleteBookNotFound() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>());
+		when(bookService.deleteBook(book)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
 		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isNotFound());
 		
-		verify(bookRepository, never()).delete(book);
+		verify(bookService, times(1)).deleteBook(book);
 	}
 	
 	@Test
 	void updateBook() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
+		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createOk(newBook));
 		
-		MvcResult mvcResult = performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isOk()).andReturn();
+		MvcResult mvcResult = performUpdate(nto).andExpect(status().isOk()).andReturn();
 		
 		Book updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), Book.class);
 		
@@ -252,33 +259,35 @@ class BookControllerTest
 		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(newBook.getIsbn());
 		Assertions.assertThat(updatedBook.getPublishedDate()).isEqualTo(newBook.getPublishedDate());
 		
-		verify(bookRepository, times(1)).save(book);
+		verify(bookService, times(1)).updateBook(nto);
 	}
 	
 	@Test
 	void updateBookConflict() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
+		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT, ""));
 		
-		performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isConflict());
+		performUpdate(nto).andExpect(status().isConflict());
 		
-		verify(bookRepository, never()).save(book);
+		verify(bookService, times(1)).updateBook(nto);
 	}
 	
 	@Test
 	void updateBookNotFound() throws Exception
 	{
-		Book book = getRandomBook();
+		Book book = BookHelper.getRandomBook();
 		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
-		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
+		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
-		performUpdate(new BookUpdateNto(book, newBook)).andExpect(status().isNotFound());
+		performUpdate(nto).andExpect(status().isNotFound());
 		
-		verify(bookRepository, never()).save(book);
+		verify(bookService, times(1)).updateBook(nto);
 	}
 	
 	private ResultActions performDeleteByIsbn(Book book) throws Exception
@@ -299,13 +308,5 @@ class BookControllerTest
 	private ResultActions performUpdate(BookUpdateNto nto) throws Exception
 	{
 		return mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
-	}
-	
-	private Book getRandomBook()
-	{
-		Faker faker = new Faker();
-		Date d = faker.date().past(1, TimeUnit.DAYS);
-		Instant instant = d.toInstant();
-		return new Book(new Random().nextInt(100), faker.book().title(), faker.book().author(), faker.code().isbn10(), instant.atZone(ZoneId.systemDefault()).toLocalDate());
 	}
 }

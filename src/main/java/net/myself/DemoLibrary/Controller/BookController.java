@@ -5,6 +5,9 @@ import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
+import net.myself.DemoLibrary.Service.BookService;
+import net.myself.DemoLibrary.Service.ServiceResponse;
+import net.myself.DemoLibrary.Service.ServiceResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,25 +16,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: use services and approach to transactions there
+//TODO: implements BookService tests and improve test coverage
+
 @RestController
 @RequestMapping("/books")
 public class BookController
 {
-	private static final Logger _logger = LoggerFactory.getLogger(GlobalControllerExceptionHandler.class);
 	@Autowired
 	IBookRepository _bookRepository;
+	@Autowired
+	BookService bookService;
 	
 	@GetMapping
 	public ResponseEntity<List<Book>> getAllBooks()
 	{
-		return new ResponseEntity<>(_bookRepository.findAll(), HttpStatus.OK);
+		return new ResponseEntity<>(bookService.getAllBooks(), HttpStatus.OK);
 	}
 	
 	@GetMapping("/findByIsbn")
 	public ResponseEntity<Book> findByIsbn(@RequestParam("isbn") String isbn)
 	{
-		return _bookRepository.findByIsbn(isbn)
+		return bookService.findByIsbn(isbn)
 						.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
 						.orElse(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 	}
@@ -39,71 +44,62 @@ public class BookController
 	@GetMapping("/findByTitle")
 	public ResponseEntity<List<Book>> findByTitle(@RequestParam("title") String title)
 	{
-		return new ResponseEntity<>(_bookRepository.findByTitle(title), HttpStatus.OK);
+		return new ResponseEntity<>(bookService.findByTitle(title), HttpStatus.OK);
 	}
 	
 	@GetMapping("/searchByTitle")
 	public ResponseEntity<List<Book>> searchByTitle(@RequestParam("title") String title)
 	{
-		return new ResponseEntity<>(_bookRepository.findByTitleContaining(title), HttpStatus.OK);
+		return new ResponseEntity<>(bookService.findByTitleContaining(title), HttpStatus.OK);
 	}
 	
-	@Transactional
 	@PostMapping
 	public ResponseEntity<Book> addBook(@RequestBody Book book)
 	{
-		if (_bookRepository.existsByIsbn(book.getIsbn())) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
-		return new ResponseEntity<>(_bookRepository.save(book), HttpStatus.CREATED);
+		var saved = bookService.addBook(book);
+		if (saved.getResult().equals(ServiceResult.CONFLICT)) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+		return new ResponseEntity<>(saved.get(), HttpStatus.CREATED);
 	}
 	
-	@Transactional
 	@DeleteMapping("/isbn/{isbn}")
 	public ResponseEntity<String> deleteBookByIsbn(@PathVariable String isbn)
 	{
-		if (!_bookRepository.existsByIsbn(isbn)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
-		_bookRepository.deleteByIsbn(isbn);
-		_logger.trace("deleted object book with isbn "+isbn);
+		if (bookService.deleteBookByIsbn(isbn).getResult().equals(ServiceResult.NOT_FOUND))
+			return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
+		
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
-	@Transactional
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteBookById(@PathVariable Long id)
 	{
-		if (!_bookRepository.existsById(id)) return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
-		_bookRepository.deleteById(id);
-		_logger.trace("deleted object book with id "+id);
+		if (bookService.deleteBookById(id).getResult().equals(ServiceResult.NOT_FOUND))
+			return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
+		
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
-	@Transactional
 	@DeleteMapping("/delete")
 	public ResponseEntity<String> deleteBook(@RequestBody Book book)
 	{
-		
-		List<Book> books = _bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn());
-			
-		if (books.isEmpty()) return new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
-		else if (books.size() > 1) return new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
-			
-		_bookRepository.delete(books.get(0));
-		_logger.trace("deleted object book with id "+book.getId());
-		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+		return switch(bookService.deleteBook(book).getResult())
+						{
+							case OK -> new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
+							case CONFLICT -> new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
+						};
 	}
 	
-	@Transactional
 	@PutMapping("/update")
 	public ResponseEntity<Book> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
 	{
 		
-		var books = _bookRepository.findByTitleAndIsbn(bookUpdateNto.oldBook().getTitle(), bookUpdateNto.oldBook().getIsbn());
-		if(books.isEmpty()) return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		if(books.size() > 1) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
-			
-		var book = books.get(0);
-		book.update(bookUpdateNto.newBook());
-			
-		_bookRepository.save(book);
-		return new ResponseEntity<>(book, HttpStatus.OK);
+		ServiceResponse<Book> bookServiceResponse = bookService.updateBook(bookUpdateNto);
+		return switch(bookServiceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(bookServiceResponse.get(), HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
+						};
 	}
 }
