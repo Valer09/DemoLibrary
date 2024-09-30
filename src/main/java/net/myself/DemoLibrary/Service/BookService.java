@@ -1,5 +1,4 @@
 package net.myself.DemoLibrary.Service;
-
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;

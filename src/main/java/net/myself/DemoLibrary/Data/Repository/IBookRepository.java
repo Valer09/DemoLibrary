@@ -1,9 +1,7 @@
 package net.myself.DemoLibrary.Data.Repository;
-
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 

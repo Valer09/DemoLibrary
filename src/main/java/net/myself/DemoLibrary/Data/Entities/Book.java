@@ -1,10 +1,5 @@
 package net.myself.DemoLibrary.Data.Entities;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
