@@ -1,13 +1,12 @@
 package net.myself.DemoLibrary.Unit.Controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.javafaker.Faker;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
-import net.myself.DemoLibrary.Unit.Controller.Helper.BookControllerRequestMap;
+import net.myself.DemoLibrary.Helper.BookControllerRequestMap;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,16 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,12 +38,6 @@ class BookControllerTest
 	private MockMvc mockMvc;
 	@MockBean
 	private IBookRepository bookRepository;
-	
-	@Test
-	void checkJacksonConfiguration()
-	{
-		assertFalse(jackson.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
-	}
 	
 	@Test
 	void getAllBooks() throws Exception

@@ -1,4 +1,4 @@
-package net.myself.DemoLibrary.Unit.Controller.Helper;
+package net.myself.DemoLibrary.Helper;
 
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.springframework.http.MediaType;
