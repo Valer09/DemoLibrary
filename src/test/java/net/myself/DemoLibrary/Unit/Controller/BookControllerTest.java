@@ -2,6 +2,7 @@ package net.myself.DemoLibrary.Unit.Controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.javafaker.Faker;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
@@ -20,8 +21,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -246,7 +250,7 @@ class BookControllerTest
 	void updateBook() throws Exception
 	{
 		Book book = getRandomBook();
-		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
+		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
@@ -266,7 +270,7 @@ class BookControllerTest
 	void updateBookConflict() throws Exception
 	{
 		Book book = getRandomBook();
-		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
+		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
@@ -279,7 +283,7 @@ class BookControllerTest
 	void updateBookNotFound() throws Exception
 	{
 		Book book = getRandomBook();
-		Book newBook = new Book(book.getId(), getRandomString(), getRandomString(), getRandomString(), book.getPublishedDate());
+		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
 		
@@ -308,21 +312,11 @@ class BookControllerTest
 		return mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
 	}
 	
-	private String getRandomString()
-	{
-		int leftLimit = 97;
-		int rightLimit = 122;
-		int targetStringLength = 10;
-		Random random = new Random();
-		
-		return random.ints(leftLimit, rightLimit + 1)
-						.limit(targetStringLength)
-						.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-						.toString();
-	}
-	
 	private Book getRandomBook()
 	{
-		return new Book(new Random().nextInt(100), getRandomString(), getRandomString(), getRandomString(), LocalDate.now());
+		Faker faker = new Faker();
+		Date d = faker.date().past(1, TimeUnit.DAYS);
+		Instant instant = d.toInstant();
+		return new Book(new Random().nextInt(100), faker.book().title(), faker.book().author(), faker.code().isbn10(), instant.atZone(ZoneId.systemDefault()).toLocalDate());
 	}
 }
