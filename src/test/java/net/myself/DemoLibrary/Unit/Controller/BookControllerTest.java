@@ -33,13 +33,10 @@ class BookControllerTest
 	private ObjectMapper jackson;
 	@Autowired
 	private MockMvc mockMvc;
-	
 	@Mock
 	private IBookRepository bookRepository;
-	
 	@InjectMocks
 	private BookController bookController;
-	
 	@BeforeEach
 	void setUp()
 	{
@@ -48,9 +45,8 @@ class BookControllerTest
 		mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
 	}
 	
-	
 	@Test
-	void checkJacksonConfiguration() throws Exception
+	void checkJacksonConfiguration()
 	{
 		assertTrue(jackson.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
 	}
