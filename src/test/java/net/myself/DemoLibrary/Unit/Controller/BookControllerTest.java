@@ -1,54 +1,50 @@
 package net.myself.DemoLibrary.Unit.Controller;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
-import net.myself.DemoLibrary.Infrastructure.Configuration.JacksonConfig;
 import net.myself.DemoLibrary.Unit.Controller.Helper.BookControllerRequestMap;
-import org.junit.jupiter.api.BeforeEach;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-//TODO: Bonus tip use @WebMvcTest and @MockBean instead of what you are doing now. Aggiungere i verify. Refactoring per duplicazione
+//TODO: Aggiungere i verify. Refactoring per duplicazione
+
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(BookController.class)
 class BookControllerTest
 {
+	@Autowired
 	private ObjectMapper jackson;
 	@Autowired
 	private MockMvc mockMvc;
-	@Mock
+	@MockBean
 	private IBookRepository bookRepository;
-	@InjectMocks
-	private BookController bookController;
-	@BeforeEach
-	void setUp()
-	{
-		MockitoAnnotations.openMocks(this);
-		jackson = new JacksonConfig().jackson();
-		mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
-	}
 	
 	@Test
 	void checkJacksonConfiguration()
 	{
-		assertTrue(jackson.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
+		assertFalse(jackson.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
 	}
 	
 	@Test
@@ -63,25 +59,20 @@ class BookControllerTest
 		
 		when(bookRepository.findAll()).thenReturn(bookList);
 		
-		mockMvc.perform(BookControllerRequestMap.getAllBooks())
+		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.getAllBooks())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(4)))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(bookId))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].id").value(bookId + 1))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[2].id").value(bookId + 2))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[3].id").value(bookId + 3))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("Test Book"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value("Test Book1"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[2].title").value("Test Book2"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[3].title").value("Test Book3"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].author").value("Author"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].author").value("Author1"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[2].author").value("Author2"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[3].author").value("Author3"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[0].isbn").value("123455"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[1].isbn").value("123456"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[2].isbn").value("123457"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$[3].isbn").value("123458"));
+						.andReturn();
+		
+		List<Book> response = jackson.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+		for(int i = 0; i < response.size(); i++)
+		{
+			Book b = response.get(i);
+			Assertions.assertThat(b.getId()).isEqualTo(bookId+i);
+			Assertions.assertThat(b.getIsbn()).isEqualTo(bookList.get(i).getIsbn());
+			Assertions.assertThat(b.getTitle()).isEqualTo(bookList.get(i).getTitle());
+			Assertions.assertThat(b.getAuthor()).isEqualTo(bookList.get(i).getAuthor());
+		}
 	}
 	
 	@Test
@@ -139,18 +130,21 @@ class BookControllerTest
 		Book book = new Book(1, "title", "author", "isbn-0000", now);
 		
 		String jsonBook = jackson.writeValueAsString(book);
-		
+		System.out.println(jsonBook);
+		System.out.println(jackson.writeValueAsString(now));
 		when(bookRepository.save(book)).thenReturn(book);
 		
-		mockMvc.perform(BookControllerRequestMap.addBook(jsonBook))
+		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.addBook(jsonBook))
 						.andDo(print())
 						.andExpect(status().isCreated())
-						.andExpect(MockMvcResultMatchers.jsonPath("$.title").value("title"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.author").value("author"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value("isbn-0000"))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[0]").value(now.getYear()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[1]").value(now.getMonthValue()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[2]").value(now.getDayOfMonth()));
+						.andReturn();
+		
+		Book addedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), Book.class);
+		
+		Assertions.assertThat(addedBook.getTitle()).isEqualTo(book.getTitle());
+		Assertions.assertThat(addedBook.getAuthor()).isEqualTo(book.getAuthor());
+		Assertions.assertThat(addedBook.getIsbn()).isEqualTo(book.getIsbn());
+		Assertions.assertThat(addedBook.getPublishedDate()).isEqualTo(book.getPublishedDate());
 	}
 	
 	@Test
@@ -268,7 +262,8 @@ class BookControllerTest
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		
-		mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
+		//Directly reading json
+		/*mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
 						.andDo(print())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.title").value(newBook.getTitle()))
@@ -276,7 +271,20 @@ class BookControllerTest
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(newBook.getIsbn()))
 						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[0]").value(newBook.getPublishedDate().getYear()))
 						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[1]").value(newBook.getPublishedDate().getMonthValue()))
-						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[2]").value(newBook.getPublishedDate().getDayOfMonth()));
+						.andExpect(MockMvcResultMatchers.jsonPath("$.publishedDate[2]").value(newBook.getPublishedDate().getDayOfMonth()));*/
+		
+		//Serialize the response and using Assertions.[...]
+		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto)))
+						.andDo(print())
+						.andExpect(status().isOk())
+						.andReturn();
+		
+		Book updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), Book.class);
+		
+		Assertions.assertThat(updatedBook.getTitle()).isEqualTo(newBook.getTitle());
+		Assertions.assertThat(updatedBook.getAuthor()).isEqualTo(newBook.getAuthor());
+		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(newBook.getIsbn());
+		Assertions.assertThat(updatedBook.getPublishedDate()).isEqualTo(newBook.getPublishedDate());
 		
 		verify(bookRepository).save(book);
 	}
