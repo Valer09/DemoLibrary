@@ -3,6 +3,7 @@ package net.myself.DemoLibrary.Unit.Data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
+import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.JacksonConfig;
 import org.assertj.core.api.Assertions;
@@ -39,13 +40,13 @@ public class RepositoryTest
 	void containsTest() throws Exception
 	{
 		List<Book> list = new ArrayList<>(Arrays.asList(
-						Book.createTransientBook( "title", "test", "test", LocalDate.now()),
-						Book.createTransientBook( "titleOnStart", "test", "test1", LocalDate.now()),
-						Book.createTransientBook( "EndWithtitle", "test", "test2", LocalDate.now()),
-						Book.createTransientBook( "InTheMiddletitleIs", "test", "test3", LocalDate.now()),
-						Book.createTransientBook( "TitleCaps", "test", "test4", LocalDate.now()),
-						Book.createTransientBook( "TITLEisuppercase", "test", "test5", LocalDate.now()),
-						Book.createTransientBook( "test", "test", "test6", LocalDate.now())));
+						Book.createTransientBook( new BookNto("title", "test", "test", LocalDate.now())),
+						Book.createTransientBook( new BookNto("titleOnStart", "test", "test1", LocalDate.now())),
+						Book.createTransientBook( new BookNto("EndWithtitle", "test", "test2", LocalDate.now())),
+						Book.createTransientBook( new BookNto("InTheMiddletitleIs", "test", "test3", LocalDate.now())),
+						Book.createTransientBook( new BookNto("TitleCaps", "test", "test4", LocalDate.now())),
+						Book.createTransientBook( new BookNto("TITLEisuppercase", "test", "test5", LocalDate.now())),
+						Book.createTransientBook( new BookNto("test", "test", "test6", LocalDate.now()))));
 		
 		for(Book b : list) repository.save(b);
 		

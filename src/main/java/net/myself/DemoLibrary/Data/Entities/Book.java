@@ -34,11 +34,6 @@ public class Book
 		this.setPublishedDate(publishedDate);
 	}
 	
-	public static Book createTransientBook(String title, String author, String isbn, LocalDate publishedDate)
-	{
-		return new Book(title, author, isbn, publishedDate);
-	}
-	
 	public static Book createTransientBook(BookNto bookNto)
 	{
 		return new Book(bookNto.title(), bookNto.author(), bookNto.isbn(), bookNto.publishedDate());

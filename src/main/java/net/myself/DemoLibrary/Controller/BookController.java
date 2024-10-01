@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: Expose no id out of controllers; use transaction method
-
 @RestController
 @RequestMapping("/books")
 public class BookController

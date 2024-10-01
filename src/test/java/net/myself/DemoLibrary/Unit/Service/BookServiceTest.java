@@ -9,6 +9,7 @@ import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -73,11 +75,11 @@ public class BookServiceTest
 	void searchByTitle() throws Exception
 	{
 		List<Book> list = new ArrayList<>(Arrays.asList(
-						Book.createTransientBook("title", "test", "test", LocalDate.now()),
-						Book.createTransientBook("titleOnStart", "test", "test", LocalDate.now()),
-						Book.createTransientBook("EndWithtitle", "test", "test", LocalDate.now()),
-						Book.createTransientBook("InTheMiddletitleIs", "test", "test", LocalDate.now()),
-						Book.createTransientBook("TITLEisuppercase", "test", "test", LocalDate.now())));
+						Book.createTransientBook(new BookNto("title", "test", "test", LocalDate.now())),
+						Book.createTransientBook(new BookNto("titleOnStart", "test", "test", LocalDate.now())),
+						Book.createTransientBook(new BookNto("EndWithtitle", "test", "test", LocalDate.now())),
+						Book.createTransientBook(new BookNto("InTheMiddletitleIs", "test", "test", LocalDate.now())),
+						Book.createTransientBook(new BookNto("TITLEisuppercase", "test", "test", LocalDate.now()))));
 		
 		when(bookRepository.findByTitleContainingIgnoreCase("title")).thenReturn(list);
 		
@@ -94,10 +96,22 @@ public class BookServiceTest
 	@Test
 	void addBook() throws Exception
 	{
+		
 		Book book = BookHelper.getRandomBook();
-		when(bookRepository.save(book)).thenReturn(book);
-		assertEquals(bookService.addBook(BookNto.fromBook(book)).get().isbn(), book.getIsbn());
-		verify(bookRepository, times(1)).save(book);
+		when(bookRepository.save(any(Book.class))).thenReturn(book);
+		
+		BookNto addedBookNto = bookService.addBook(BookNto.fromBook(book)).get();
+		assertEquals(book.getIsbn(), addedBookNto.isbn());
+		
+		ArgumentCaptor<Book> bookCaptor = ArgumentCaptor.forClass(Book.class);
+		verify(bookRepository, times(1)).save(bookCaptor.capture());
+		
+		Book capturedBook = bookCaptor.getValue();
+		
+		assertEquals(book.getIsbn(), capturedBook.getIsbn());
+		assertEquals(book.getTitle(), capturedBook.getTitle());
+		assertEquals(book.getAuthor(), capturedBook.getAuthor());
+		assertEquals(book.getPublishedDate(), capturedBook.getPublishedDate());
 	}
 	
 	@Test
