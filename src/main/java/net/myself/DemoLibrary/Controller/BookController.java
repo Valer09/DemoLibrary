@@ -12,12 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+//TODO: take care of warnings
+
 @RestController
 @RequestMapping("/books")
 public class BookController
 {
-	@Autowired
-	IBookRepository _bookRepository;
 	@Autowired
 	BookService bookService;
 	
