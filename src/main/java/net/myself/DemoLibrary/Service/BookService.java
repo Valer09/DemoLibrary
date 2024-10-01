@@ -89,7 +89,7 @@ public class BookService
 		book.update(bookUpdateNto.newBook());
 		var saved = bookRepository.save(book);
 		
-		_logger.trace(MessageFormat.format("Book with id %d updated", +book.getId()));
+		_logger.trace(MessageFormat.format("Book with id %d updated", +saved.getId()));
 		
 		return ServiceResponse.createOk(saved);
 	}

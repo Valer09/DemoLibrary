@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: implements BookService tests and improve test coverage
+//TODO: Improve test coverage; ServiceResponse test; Book-update test; Repository-cointains test; Expose NTO with no id out of controllers
 
 @RestController
 @RequestMapping("/books")

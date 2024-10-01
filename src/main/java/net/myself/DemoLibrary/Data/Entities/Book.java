@@ -15,8 +15,6 @@ public class Book
 	private String author;
 	private LocalDate publishedDate;
 	
-	public Book(){}
-	
 	public Book(long id, String title, String author, String isbn, LocalDate publishedDate)
 	{
 		this.id = id;
@@ -79,14 +77,16 @@ public class Book
 		this.publishedDate = publishedDate;
 	}
 	
+	@Override
 	public int hashCode() {
 		return getClass().hashCode();
 	}
 	
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
 		
-		if  ( obj == null || getClass() != obj.getClass() ) return false;
+		if  (!(obj instanceof Book)) return false;
 		Book other = (Book) obj;
 		
 		return id >=0 &&
