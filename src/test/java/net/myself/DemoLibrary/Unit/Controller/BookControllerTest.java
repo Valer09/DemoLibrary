@@ -177,30 +177,6 @@ class BookControllerTest
 	}
 	
 	@Test
-	void deleteBookById() throws Exception
-	{
-		Book book = BookHelper.getRandomBook();
-		
-		when(bookService.deleteBookById(book.getId())).thenReturn(ServiceResponse.createOk(""));
-		
-		performDeleteById(book).andExpect(status().isOk());
-		
-		verify(bookService, times(1)).deleteBookById(book.getId());
-	}
-	
-	@Test
-	void deleteBookByIdNotFound() throws Exception
-	{
-		Book book = BookHelper.getRandomBook();
-		
-		when(bookService.deleteBookById(book.getId())).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
-		
-		performDeleteById(book).andExpect(status().isNotFound());
-		
-		verify(bookService, times(1)).deleteBookById(book.getId());
-	}
-	
-	@Test
 	void deleteBook() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
@@ -290,11 +266,6 @@ class BookControllerTest
 	private ResultActions performDeleteByIsbn(Book book) throws Exception
 	{
 		return mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book)).andDo(print());
-	}
-	
-	private ResultActions performDeleteById(Book book) throws Exception
-	{
-		return mockMvc.perform(BookControllerRequestMap.deleteBookById(book)).andDo(print());
 	}
 	
 	private ResultActions performDeleteBook(String jsonBook) throws Exception

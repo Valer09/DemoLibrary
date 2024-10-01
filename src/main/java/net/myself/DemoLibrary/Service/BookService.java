@@ -3,6 +3,7 @@ import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
+import net.myself.DemoLibrary.Infrastructure.Configuration.VisibleForTesting;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +57,6 @@ public class BookService
 	}
 	
 	@Transactional
-	public ServiceResponse<String> deleteBookById(Long id)
-	{
-		if (!bookRepository.existsById(id)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
-		bookRepository.deleteById(id);
-		_logger.trace("deleted object book with id "+id);
-		return ServiceResponse.createOk("Book deleted successfully");
-	}
-	
-	@Transactional
 	public ServiceResponse<String> deleteBook(Book book)
 	{
 		List<Book> books = bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn());
@@ -92,6 +84,23 @@ public class BookService
 		_logger.trace(MessageFormat.format("Book with id %d updated", +saved.getId()));
 		
 		return ServiceResponse.createOk(saved);
+	}
+	
+	/**
+	 * <b>WARNING:</b>
+	 * It is intended to be used internally within this layer, especially for communication with the Data layer.
+	 * <p>
+	 * The method will only be visible externally for testing purposes.
+	 * </p>
+	 */
+	@VisibleForTesting
+	@Transactional
+	public ServiceResponse<String> deleteBookById(Long id)
+	{
+		if (!bookRepository.existsById(id)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
+		bookRepository.deleteById(id);
+		_logger.trace("deleted object book with id "+id);
+		return ServiceResponse.createOk("Book deleted successfully");
 	}
 }
 
