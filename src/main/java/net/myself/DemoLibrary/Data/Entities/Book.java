@@ -1,5 +1,7 @@
 package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
+import net.myself.DemoLibrary.Data.NTO.BookNto;
+
 import java.time.LocalDate;
 
 @Entity
@@ -35,6 +37,11 @@ public class Book
 	public static Book createTransientBook(String title, String author, String isbn, LocalDate publishedDate)
 	{
 		return new Book(title, author, isbn, publishedDate);
+	}
+	
+	public static Book createTransientBook(BookNto bookNto)
+	{
+		return new Book(bookNto.title(), bookNto.author(), bookNto.isbn(), bookNto.publishedDate());
 	}
 	
 	public long getId()

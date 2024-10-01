@@ -1,5 +1,6 @@
 package net.myself.DemoLibrary.Controller;
 import net.myself.DemoLibrary.Data.Entities.Book;
+import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Service.BookService;
@@ -23,13 +24,13 @@ public class BookController
 	BookService bookService;
 	
 	@GetMapping
-	public ResponseEntity<List<Book>> getAllBooks()
+	public ResponseEntity<List<BookNto>> getAllBooks()
 	{
 		return new ResponseEntity<>(bookService.getAllBooks(), HttpStatus.OK);
 	}
 	
 	@GetMapping("/findByIsbn")
-	public ResponseEntity<Book> findByIsbn(@RequestParam("isbn") String isbn)
+	public ResponseEntity<BookNto> findByIsbn(@RequestParam("isbn") String isbn)
 	{
 		return bookService.findByIsbn(isbn)
 						.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
@@ -37,19 +38,19 @@ public class BookController
 	}
 	
 	@GetMapping("/findByTitle")
-	public ResponseEntity<List<Book>> findByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<BookNto>> findByTitle(@RequestParam("title") String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitle(title), HttpStatus.OK);
 	}
 	
 	@GetMapping("/searchByTitle")
-	public ResponseEntity<List<Book>> searchByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleContainingIgnoreCase(title), HttpStatus.OK);
 	}
 	
 	@PostMapping
-	public ResponseEntity<Book> addBook(@RequestBody Book book)
+	public ResponseEntity<BookNto> addBook(@RequestBody BookNto book)
 	{
 		var saved = bookService.addBook(book);
 		if (saved.getResult().equals(ServiceResult.CONFLICT)) return new ResponseEntity<>(null, HttpStatus.CONFLICT);
@@ -66,7 +67,7 @@ public class BookController
 	}
 	
 	@DeleteMapping("/delete")
-	public ResponseEntity<String> deleteBook(@RequestBody Book book)
+	public ResponseEntity<String> deleteBook(@RequestBody BookNto book)
 	{
 		return switch(bookService.deleteBook(book).getResult())
 						{
@@ -77,10 +78,10 @@ public class BookController
 	}
 	
 	@PutMapping("/update")
-	public ResponseEntity<Book> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
+	public ResponseEntity<BookNto> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
 	{
 		
-		ServiceResponse<Book> bookServiceResponse = bookService.updateBook(bookUpdateNto);
+		ServiceResponse<BookNto> bookServiceResponse = bookService.updateBook(bookUpdateNto);
 		return switch(bookServiceResponse.getResult())
 						{
 							case OK -> new ResponseEntity<>(bookServiceResponse.get(), HttpStatus.OK);

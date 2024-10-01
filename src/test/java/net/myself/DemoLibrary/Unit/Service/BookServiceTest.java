@@ -1,6 +1,7 @@
 package net.myself.DemoLibrary.Unit.Service;
 
 import net.myself.DemoLibrary.Data.Entities.Book;
+import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookHelper;
@@ -40,9 +41,9 @@ public class BookServiceTest
 		
 		when(bookRepository.findAll()).thenReturn(bookList);
 		
-		List<Book> result = bookService.getAllBooks();
-		Assertions.assertThat(result.get(0).getIsbn()).isEqualTo(bookList.get(0).getIsbn());
-		Assertions.assertThat(result.get(1).getIsbn()).isEqualTo(bookList.get(1).getIsbn());
+		List<BookNto> result = bookService.getAllBooks();
+		Assertions.assertThat(result.get(0).isbn()).isEqualTo(bookList.get(0).getIsbn());
+		Assertions.assertThat(result.get(1).isbn()).isEqualTo(bookList.get(1).getIsbn());
 		
 		verify(bookRepository, times(1)).findAll();
 	}
@@ -53,8 +54,8 @@ public class BookServiceTest
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(Optional.of(book));
 		var foundBook = bookService.findByIsbn(book.getIsbn());
-		assertEquals(foundBook.get().getIsbn(), book.getIsbn());
-		assertEquals(foundBook.get().getTitle(), book.getTitle());
+		assertEquals(foundBook.get().isbn(), book.getIsbn());
+		assertEquals(foundBook.get().title(), book.getTitle());
 		verify(bookRepository, times(1)).findByIsbn(book.getIsbn());
 	}
 	
@@ -64,7 +65,7 @@ public class BookServiceTest
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.findByTitle(book.getTitle())).thenReturn(new ArrayList<>(Arrays.asList(book)));
 		var foundBook = bookService.findByTitle(book.getTitle()).get(0);
-		assertEquals(foundBook.getIsbn(), book.getIsbn());
+		assertEquals(foundBook.isbn(), book.getIsbn());
 		verify(bookRepository, times(1)).findByTitle(book.getTitle());
 	}
 	
@@ -81,11 +82,11 @@ public class BookServiceTest
 		when(bookRepository.findByTitleContainingIgnoreCase("title")).thenReturn(list);
 		
 		var result = bookService.findByTitleContainingIgnoreCase("title");
-		assertEquals(result.get(0).getIsbn(), list.get(0).getIsbn());
-		assertEquals(result.get(1).getIsbn(), list.get(1).getIsbn());
-		assertEquals(result.get(2).getIsbn(), list.get(2).getIsbn());
-		assertEquals(result.get(3).getIsbn(), list.get(3).getIsbn());
-		assertEquals(result.get(4).getIsbn(), list.get(4).getIsbn());
+		assertEquals(result.get(0).isbn(), list.get(0).getIsbn());
+		assertEquals(result.get(1).isbn(), list.get(1).getIsbn());
+		assertEquals(result.get(2).isbn(), list.get(2).getIsbn());
+		assertEquals(result.get(3).isbn(), list.get(3).getIsbn());
+		assertEquals(result.get(4).isbn(), list.get(4).getIsbn());
 		
 		verify(bookRepository, times(1)).findByTitleContainingIgnoreCase("title");
 	}
@@ -95,7 +96,7 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.save(book)).thenReturn(book);
-		assertEquals(bookService.addBook(book).get().getIsbn(), book.getIsbn());
+		assertEquals(bookService.addBook(BookNto.fromBook(book)).get().isbn(), book.getIsbn());
 		verify(bookRepository, times(1)).save(book);
 	}
 	
@@ -140,7 +141,7 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
-		Assertions.assertThat(bookService.deleteBook(book).getResult()).isEqualTo(ServiceResult.OK);
+		Assertions.assertThat(bookService.deleteBook(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.OK);
 		verify(bookRepository, times(1)).delete(book);
 	}
 	
@@ -149,7 +150,7 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
-		Assertions.assertThat(bookService.deleteBook(book).getResult()).isEqualTo(ServiceResult.CONFLICT);
+		Assertions.assertThat(bookService.deleteBook(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.CONFLICT);
 		verify(bookRepository, never()).delete(book);
 	}
 	
@@ -158,7 +159,7 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>());
-		Assertions.assertThat(bookService.deleteBook(book).getResult()).isEqualTo(ServiceResult.NOT_FOUND);
+		Assertions.assertThat(bookService.deleteBook(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		verify(bookRepository, never()).delete(book);
 	}
 	
@@ -167,20 +168,21 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		Book temp = BookHelper.getRandomBook();
-		Book bookCopy =  Book.createTransientBook(temp.getTitle(), temp.getAuthor(), temp.getIsbn(), temp.getPublishedDate());
-		Book bookNto = Book.createTransientBook(temp.getTitle(), temp.getAuthor(), temp.getIsbn(), temp.getPublishedDate());
-		bookCopy.update(bookNto);
+		Book bookCopy =  Book.createTransientBook(BookNto.fromBook(book));
+		bookCopy.update(temp);
+		BookNto bookNto = BookNto.fromBook(temp);
+		
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
 		when(bookRepository.save(book)).thenReturn(bookCopy);
 		
-		var result = bookService.updateBook(new BookUpdateNto(book, bookNto));
+		var result = bookService.updateBook(new BookUpdateNto(BookNto.fromBook(book), bookNto));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.OK);
-		assertEquals(result.get().getIsbn(), book.getIsbn());
-		assertEquals(result.get().getTitle(), bookCopy.getTitle());
-		assertEquals(result.get().getAuthor(), bookCopy.getAuthor());
-		assertEquals(result.get().getIsbn(), bookCopy.getIsbn());
-		assertEquals(result.get().getPublishedDate(), bookCopy.getPublishedDate());
+		assertEquals(result.get().isbn(), book.getIsbn());
+		assertEquals(result.get().title(), bookCopy.getTitle());
+		assertEquals(result.get().author(), bookCopy.getAuthor());
+		assertEquals(result.get().isbn(), bookCopy.getIsbn());
+		assertEquals(result.get().publishedDate(), bookCopy.getPublishedDate());
 		verify(bookRepository, times(1)).save(book);
 	}
 	
@@ -188,12 +190,12 @@ public class BookServiceTest
 	void updateBookConflict() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		Book bookEdit = Book.createTransientBook(book.getTitle(), book.getAuthor(), book.getIsbn(), book.getPublishedDate());
+		Book bookEdit = Book.createTransientBook(BookNto.fromBook(book));
 		bookEdit.update(BookHelper.getRandomBook());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
 		
-		var result = bookService.updateBook(new BookUpdateNto(book, bookEdit));
+		var result = bookService.updateBook(new BookUpdateNto(BookNto.fromBook(book), BookNto.fromBook(bookEdit)));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.CONFLICT);
 		assertNull(result.get());
 		verify(bookRepository, never()).save(book);
@@ -203,12 +205,12 @@ public class BookServiceTest
 	void updateBookNotFound() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		Book bookEdit = Book.createTransientBook(book.getTitle(), book.getAuthor(), book.getIsbn(), book.getPublishedDate());
+		Book bookEdit = Book.createTransientBook(BookNto.fromBook(book));
 		bookEdit.update(BookHelper.getRandomBook());
 		
 		when(bookRepository.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
 		
-		var result = bookService.updateBook(new BookUpdateNto(book, bookEdit));
+		var result = bookService.updateBook(new BookUpdateNto(BookNto.fromBook(book), BookNto.fromBook(bookEdit)));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		assertNull(result.get());
 		verify(bookRepository, never()).save(book);
