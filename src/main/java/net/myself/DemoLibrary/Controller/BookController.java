@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: take care of warnings
+//TODO: take care of warnings; add createTransientBook and equals tests for Book
 
 @RestController
 @RequestMapping("/books")
