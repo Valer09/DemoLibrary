@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: Improve test coverage; ServiceResponse test; Book-update test; Repository-cointains test; Expose NTO with no id out of controllers
+//TODO: Expose no id out of controllers; use transaction method
 
 @RestController
 @RequestMapping("/books")
@@ -45,7 +45,7 @@ public class BookController
 	@GetMapping("/searchByTitle")
 	public ResponseEntity<List<Book>> searchByTitle(@RequestParam("title") String title)
 	{
-		return new ResponseEntity<>(bookService.findByTitleContaining(title), HttpStatus.OK);
+		return new ResponseEntity<>(bookService.findByTitleContainingIgnoreCase(title), HttpStatus.OK);
 	}
 	
 	@PostMapping

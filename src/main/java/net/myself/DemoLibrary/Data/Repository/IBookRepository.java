@@ -11,7 +11,7 @@ public interface IBookRepository extends JpaRepository<Book, Long>
 	//define custom query
 	List<Book> findByTitle(String title);
 	
-	List<Book> findByTitleContaining(String title);
+	List<Book> findByTitleContainingIgnoreCase(String title);
 	
 	List<Book> findByTitleAndIsbn(String title, String isbn);
 	

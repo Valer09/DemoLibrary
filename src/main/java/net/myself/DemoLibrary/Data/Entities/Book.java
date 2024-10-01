@@ -15,6 +15,7 @@ public class Book
 	private String author;
 	private LocalDate publishedDate;
 	
+	public Book(){}
 	public Book(long id, String title, String author, String isbn, LocalDate publishedDate)
 	{
 		this.id = id;
@@ -22,6 +23,18 @@ public class Book
 		this.setAuthor(author);
 		this.setIsbn(isbn);
 		this.setPublishedDate(publishedDate);
+	}
+	private Book(String title, String author, String isbn, LocalDate publishedDate)
+	{
+		this.setTitle(title);
+		this.setAuthor(author);
+		this.setIsbn(isbn);
+		this.setPublishedDate(publishedDate);
+	}
+	
+	public static Book createTransientBook(String title, String author, String isbn, LocalDate publishedDate)
+	{
+		return new Book(title, author, isbn, publishedDate);
 	}
 	
 	public long getId()

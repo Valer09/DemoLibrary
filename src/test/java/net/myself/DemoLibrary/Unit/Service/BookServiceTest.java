@@ -1,21 +1,16 @@
 package net.myself.DemoLibrary.Unit.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
-import net.myself.DemoLibrary.Helper.BookControllerRequestMap;
 import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Service.BookService;
-import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,7 +22,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 public class BookServiceTest
@@ -83,16 +77,16 @@ public class BookServiceTest
 						new Book(4, "InTheMiddletitleIs", "test", "test", LocalDate.now()),
 						new Book(5, "TITLEisuppercase", "test", "test", LocalDate.now())));
 		
-		when(bookRepository.findByTitleContaining("title")).thenReturn(list);
+		when(bookRepository.findByTitleContainingIgnoreCase("title")).thenReturn(list);
 		
-		var result = bookService.findByTitleContaining("title");
+		var result = bookService.findByTitleContainingIgnoreCase("title");
 		assertEquals(result.get(0).getId(), list.get(0).getId());
 		assertEquals(result.get(1).getId(), list.get(1).getId());
 		assertEquals(result.get(2).getId(), list.get(2).getId());
 		assertEquals(result.get(3).getId(), list.get(3).getId());
 		assertEquals(result.get(4).getId(), list.get(4).getId());
 		
-		verify(bookRepository, times(1)).findByTitleContaining("title");
+		verify(bookRepository, times(1)).findByTitleContainingIgnoreCase("title");
 	}
 	
 	@Test

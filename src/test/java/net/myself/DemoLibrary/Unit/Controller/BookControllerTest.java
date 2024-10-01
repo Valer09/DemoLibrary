@@ -1,7 +1,6 @@
 package net.myself.DemoLibrary.Unit.Controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.javafaker.Faker;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
@@ -22,11 +21,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import java.time.Instant;
+
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -121,7 +119,7 @@ class BookControllerTest
 							new Book(1,"contains"+title,"author2","zxy",LocalDate.now())
 						));
 		
-		when(bookService.findByTitleContaining(title)).thenReturn(books);
+		when(bookService.findByTitleContainingIgnoreCase(title)).thenReturn(books);
 		
 		mockMvc.perform(BookControllerRequestMap.searchByTitle(title))
 						.andExpect(status().isOk())
@@ -130,7 +128,7 @@ class BookControllerTest
 						.andExpect(MockMvcResultMatchers.jsonPath("$[1].title").value(title))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[2].title").value("containsTitle"));
 		
-		verify(bookService, times(1)).findByTitleContaining(title);
+		verify(bookService, times(1)).findByTitleContainingIgnoreCase(title);
 	}
 	
 	@Test

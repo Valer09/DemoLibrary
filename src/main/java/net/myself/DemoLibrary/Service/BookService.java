@@ -34,9 +34,9 @@ public class BookService
 		return bookRepository.findByTitle(title);
 	}
 	
-	public List<Book> findByTitleContaining(String title)
+	public List<Book> findByTitleContainingIgnoreCase(String title)
 	{
-		return bookRepository.findByTitleContaining(title);
+		return bookRepository.findByTitleContainingIgnoreCase(title);
 	}
 	
 	@Transactional
