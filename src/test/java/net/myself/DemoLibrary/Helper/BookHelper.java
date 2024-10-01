@@ -16,6 +16,14 @@ public class BookHelper
 		Faker faker = new Faker();
 		Date d = faker.date().past(1, TimeUnit.DAYS);
 		Instant instant = d.toInstant();
+		return Book.createTransientBook(faker.book().title(), faker.book().author(), faker.code().isbn10(), instant.atZone(ZoneId.systemDefault()).toLocalDate());
+	}
+	
+	public static Book getRandomBookWithId()
+	{
+		Faker faker = new Faker();
+		Date d = faker.date().past(1, TimeUnit.DAYS);
+		Instant instant = d.toInstant();
 		return new Book(new Random().nextInt(100), faker.book().title(), faker.book().author(), faker.code().isbn10(), instant.atZone(ZoneId.systemDefault()).toLocalDate());
 	}
 }

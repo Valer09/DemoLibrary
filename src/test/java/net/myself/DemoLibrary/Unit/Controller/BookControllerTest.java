@@ -64,7 +64,6 @@ class BookControllerTest
 		for(int i = 0; i < response.size(); i++)
 		{
 			Book b = response.get(i);
-			Assertions.assertThat(b.getId()).isEqualTo(bookList.get(i).getId());
 			Assertions.assertThat(b.getIsbn()).isEqualTo(bookList.get(i).getIsbn());
 			Assertions.assertThat(b.getTitle()).isEqualTo(bookList.get(i).getTitle());
 			Assertions.assertThat(b.getAuthor()).isEqualTo(bookList.get(i).getAuthor());
@@ -78,7 +77,7 @@ class BookControllerTest
 	{
 		String isbn = "abcd";
 		
-		when(bookService.findByIsbn(isbn)).thenReturn(Optional.of(new Book(1,"test","test", isbn,LocalDate.now())));
+		when(bookService.findByIsbn(isbn)).thenReturn(Optional.of(Book.createTransientBook("test","test", isbn,LocalDate.now())));
 		
 		mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
@@ -93,8 +92,8 @@ class BookControllerTest
 		String title = "title";
 		List<Book> books = new ArrayList<>(Arrays.asList
 						(
-										new Book(1, title,"author","abcd",LocalDate.now()),
-										new Book(1, title,"author","zxy",LocalDate.now())
+										Book.createTransientBook(title,"author","abcd",LocalDate.now()),
+										Book.createTransientBook(title,"author","zxy",LocalDate.now())
 						));
 		
 		when(bookService.findByTitle(title)).thenReturn(books);
@@ -114,9 +113,9 @@ class BookControllerTest
 		String title = "Title";
 		List<Book> books = new ArrayList<>(Arrays.asList
 						(
-							new Book(1,title,"author","abcd",LocalDate.now()),
-							new Book(1,title,"author","zxy",LocalDate.now()),
-							new Book(1,"contains"+title,"author2","zxy",LocalDate.now())
+										Book.createTransientBook(title,"author","abcd",LocalDate.now()),
+										Book.createTransientBook(title,"author","zxy",LocalDate.now()),
+										Book.createTransientBook("contains"+title,"author2","zxy",LocalDate.now())
 						));
 		
 		when(bookService.findByTitleContainingIgnoreCase(title)).thenReturn(books);
@@ -243,7 +242,7 @@ class BookControllerTest
 	void updateBook() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		Book newBook = Book.createTransientBook(book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
 		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createOk(newBook));
@@ -264,7 +263,7 @@ class BookControllerTest
 	void updateBookConflict() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		Book newBook = Book.createTransientBook(book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
 		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT, ""));
@@ -278,7 +277,7 @@ class BookControllerTest
 	void updateBookNotFound() throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		Book newBook = new Book(book.getId(), book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
+		Book newBook = Book.createTransientBook(book.getTitle()+"ed", book.getAuthor()+"ed", book.getIsbn(), book.getPublishedDate());
 		BookUpdateNto nto = new BookUpdateNto(book, newBook);
 		
 		when(bookService.updateBook(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));

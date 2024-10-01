@@ -100,9 +100,7 @@ public class Book
 		if (this == obj) return true;
 		
 		if  (!(obj instanceof Book)) return false;
-		Book other = (Book) obj;
 		
-		return id >=0 &&
-						id == (other.getId());
+		return id >=0 && id == (((Book) obj).getId());
 	}
 }

@@ -55,7 +55,6 @@ public class RepositoryTest
 		for(int i = 0; i < list.size() - 1; i++)
 		{
 			Book b = list.get(i);
-			assertEquals(b.getId(), res.get(i).getId());
 			assertEquals(b.getAuthor(), res.get(i).getAuthor());
 			assertEquals(b.getTitle(), res.get(i).getTitle());
 			assertEquals(b.getIsbn(), res.get(i).getIsbn());

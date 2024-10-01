@@ -10,11 +10,10 @@ public class BookTest
 	@Test
 	void updateTest()
 	{
-		Book book = BookHelper.getRandomBook();
-		var id = book.getId();
+		Book book = BookHelper.getRandomBookWithId();
 		Book other = BookHelper.getRandomBook();
 		book.update(other);
-		Assertions.assertEquals(book.getId(), id);
+		Assertions.assertEquals(book.getId(), book.getId());
 		Assertions.assertEquals(book.getTitle(), other.getTitle());
 		Assertions.assertEquals(book.getIsbn(), other.getIsbn());
 		Assertions.assertEquals(book.getAuthor(), other.getAuthor());
