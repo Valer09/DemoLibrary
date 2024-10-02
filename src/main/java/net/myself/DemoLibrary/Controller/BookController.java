@@ -1,8 +1,6 @@
 package net.myself.DemoLibrary.Controller;
-import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
-import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
@@ -12,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: take care of warnings; add createTransientBook and equals tests for Book
+//TODO: take care of warnings; add createTransientBook and equals tests for Book.
 
 @RestController
 @RequestMapping("/books")
