@@ -1,20 +1,16 @@
 package net.myself.DemoLibrary.Unit.Data;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
-import net.myself.DemoLibrary.Data.NTO.BookNto;
+import net.myself.DemoLibrary.Data.Repository.IAuthorRepository;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.JacksonConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,8 +24,9 @@ public class RepositoryTest
 {
 	ObjectMapper jackson;
 	@Autowired
-	private IBookRepository repository;
-	
+	private IBookRepository bookRepository;
+	@Autowired
+	private IAuthorRepository authorRepository;
 	@BeforeAll
 	public void setup()
 	{
@@ -39,19 +36,26 @@ public class RepositoryTest
 	@Test
 	void containsTest() throws Exception
 	{
+		List<Author> authors = new ArrayList<>();
+		for (int i = 0; i < 7; i++)
+		{
+			authors.add(new Author("Author " + (char) ('a' + i), "test", "test", LocalDate.now(), new ArrayList<>()));
+			authorRepository.save(authors.get(i));
+		}
+		
 		List<Book> list = new ArrayList<>(Arrays.asList(
-						Book.createTransientBook( new BookNto("title", "test", "test", LocalDate.now())),
-						Book.createTransientBook( new BookNto("titleOnStart", "test", "test1", LocalDate.now())),
-						Book.createTransientBook( new BookNto("EndWithtitle", "test", "test2", LocalDate.now())),
-						Book.createTransientBook( new BookNto("InTheMiddletitleIs", "test", "test3", LocalDate.now())),
-						Book.createTransientBook( new BookNto("TitleCaps", "test", "test4", LocalDate.now())),
-						Book.createTransientBook( new BookNto("TITLEisuppercase", "test", "test5", LocalDate.now())),
-						Book.createTransientBook( new BookNto("test", "test", "test6", LocalDate.now()))));
+						new Book(0, "title", authors.get(0), "test", LocalDate.now()),
+						new Book(0,"titleOnStart", authors.get(1), "test1", LocalDate.now()),
+						new Book(0,"EndWithtitle", authors.get(2), "test2", LocalDate.now()),
+						new Book(0,"InTheMiddletitleIs", authors.get(3), "test3", LocalDate.now()),
+						new Book(0,"TitleCaps", authors.get(4), "test4", LocalDate.now()),
+						new Book(0,"TITLEisuppercase", authors.get(5), "test5", LocalDate.now()),
+						new Book(0,"test", authors.get(6), "test6" , LocalDate.now())));
 		
-		for(Book b : list) repository.save(b);
+		for(Book b : list) bookRepository.save(b);
 		
-		var res = repository.findByTitleContainingIgnoreCase("title");
-		System.out.println(jackson.writeValueAsString(res));
+		var res = bookRepository.findByTitleContainingIgnoreCase("title");
+		
 		Assertions.assertThat(res.size()).isEqualTo(6);
 		for(int i = 0; i < list.size() - 1; i++)
 		{

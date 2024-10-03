@@ -33,6 +33,6 @@ public class BookTest
 		Assertions.assertEquals(first, second);
 		second.update(BookHelper.getRandomBook());
 		Assertions.assertEquals(first, second);
-		Assertions.assertEquals(first, new Book(first.getId(), "","","", LocalDate.now()));
+		Assertions.assertEquals(first, new Book(first.getId(), "",BookHelper.getRandomAuthor(),"", LocalDate.now()));
 	}
 }

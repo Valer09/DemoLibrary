@@ -13,12 +13,14 @@ public class Book
 	private long id;
 	@Column(nullable = false, unique = true)
 	private String isbn;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "author_id")
+	private Author author;
 	private String title;
-	private String author;
 	private LocalDate publishedDate;
 	
 	public Book(){}
-	public Book(long id, String title, String author, String isbn, LocalDate publishedDate)
+	public Book(long id, String title, Author author, String isbn, LocalDate publishedDate)
 	{
 		this.id = id;
 		this.setTitle(title);
@@ -26,7 +28,7 @@ public class Book
 		this.setIsbn(isbn);
 		this.setPublishedDate(publishedDate);
 	}
-	private Book(String title, String author, String isbn, LocalDate publishedDate)
+	private Book(String title, Author author, String isbn, LocalDate publishedDate)
 	{
 		this.setTitle(title);
 		this.setAuthor(author);
@@ -36,7 +38,12 @@ public class Book
 	
 	public static Book createTransientBook(BookNto bookNto)
 	{
-		return new Book(bookNto.title(), bookNto.author(), bookNto.isbn(), bookNto.publishedDate());
+		return new Book(bookNto.title(), Author.createTransientAuthor(bookNto.author()), bookNto.isbn(), bookNto.publishedDate());
+	}
+	
+	public static Book createTransientBook(BookNto bookNto, Author author)
+	{
+		return new Book(bookNto.title(), author, bookNto.isbn(), bookNto.publishedDate());
 	}
 	
 	public long getId()
@@ -49,7 +56,7 @@ public class Book
 		return title;
 	}
 	
-	public String getAuthor()
+	public Author getAuthor()
 	{
 		return author;
 	}
@@ -77,7 +84,7 @@ public class Book
 		this.title = title;
 	}
 	
-	private void setAuthor(String author)
+	private void setAuthor(Author author)
 	{
 		this.author = author;
 	}

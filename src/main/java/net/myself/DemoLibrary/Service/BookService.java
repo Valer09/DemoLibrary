@@ -1,16 +1,17 @@
 package net.myself.DemoLibrary.Service;
 import jakarta.transaction.Transactional;
+import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.VisibleForTesting;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
@@ -22,31 +23,45 @@ public class BookService
 	private static final Logger _logger = LoggerFactory.getLogger(GlobalControllerExceptionHandler.class);
 	@Autowired
 	IBookRepository bookRepository;
-	public List<BookNto> getAllBooks()
+	@Autowired
+	private AuthorService authorService;
+	
+	public List<BookNto> getAllBooksNto()
 	{
 		return bookRepository.findAll().stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
-	public Optional<BookNto> findByIsbn(String isbn)
+	public Optional<BookNto> findByIsbnNto(String isbn)
 	{
 		return bookRepository.findByIsbn(isbn).map(BookNto::fromBook);
 	}
 	
-	public List<BookNto> findByTitle(String title)
+	public List<BookNto> findByTitleNto(String title)
 	{
 		return bookRepository.findByTitle(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
-	public List<BookNto> findByTitleContainingIgnoreCase(String title)
+	public List<BookNto> findByTitleContainingIgnoreCaseNto(String title)
 	{
 		return bookRepository.findByTitleContainingIgnoreCase(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
 	@Transactional
-	public ServiceResponse<BookNto> addBook(@RequestBody BookNto book)
+	public ServiceResponse<BookNto> addBookFromNto(BookNto book)
 	{
 		if (bookRepository.existsByIsbn(book.isbn())) return ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists");
-		return ServiceResponse.createOk(BookNto.fromBook(bookRepository.save(Book.createTransientBook(book))));
+		if (!authorService.existsByCf(book.author().cf())) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "author not found");
+		
+		@SuppressWarnings("OptionalGetWithoutIsPresent")
+		Author authorByCf = authorService.findAuthorByCf(book.author().cf()).get();
+		
+		Hibernate.initialize(authorByCf.getBooks());
+		
+		Book transientBook = Book.createTransientBook(book, authorByCf);
+		Book save = bookRepository.save(transientBook);
+		
+		return ServiceResponse.createOk(BookNto.fromBook(save));
+		
 	}
 	
 	@Transactional
@@ -59,7 +74,7 @@ public class BookService
 	}
 	
 	@Transactional
-	public ServiceResponse<String> deleteBook(BookNto book)
+	public ServiceResponse<String> deleteBookFromNto(BookNto book)
 	{
 		List<Book> books = bookRepository.findByTitleAndIsbn(book.title(), book.isbn());
 		
@@ -73,14 +88,22 @@ public class BookService
 	}
 	
 	@Transactional
-	public ServiceResponse<BookNto> updateBook(BookUpdateNto bookUpdateNto)
+	public ServiceResponse<BookNto> updateBookFromNto(BookUpdateNto bookUpdateNto)
 	{
 		var books = bookRepository.findByTitleAndIsbn(bookUpdateNto.oldBook().title(), bookUpdateNto.oldBook().isbn());
 		if(books.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
 		if(books.size() > 1) return ServiceResponse.createError(ServiceResult.CONFLICT, "Multiple books found");
+		String authorCf = bookUpdateNto.newBook().author().cf();
+		
+		if(!authorService.existsByCf(authorCf)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
+		
+		var author = authorService.findAuthorByCf(authorCf);
+		if(author.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author was null");
+		
+		Hibernate.initialize(author.get().getBooks());
 		
 		var book = books.get(0);
-		book.update(Book.createTransientBook(bookUpdateNto.newBook()));
+		book.update(Book.createTransientBook(bookUpdateNto.newBook(), author.get()));
 		var saved = bookRepository.save(book);
 		
 		_logger.trace(MessageFormat.format("Book with id %d updated", +saved.getId()));
