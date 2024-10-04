@@ -9,7 +9,7 @@ import java.text.MessageFormat;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-public class BookControllerRequestMap
+public class BookControllerEndPointsMap
 {
 	private static final String basePath = "/books";
 	
@@ -21,7 +21,6 @@ public class BookControllerRequestMap
 	public static RequestBuilder deleteBookById(Book book) {return delete(buildPath("{id}"), book.getId()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);}
 	public static RequestBuilder updateBook(String jsonBook) {return put(buildPath("update")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
 	public static RequestBuilder searchByTitle(String title) {return get(buildPath("searchByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", title);}
-	public static RequestBuilder deleteBook(String jsonBook){return delete(buildPath("delete")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
 	
 	private static String buildPath(String path)
 	{

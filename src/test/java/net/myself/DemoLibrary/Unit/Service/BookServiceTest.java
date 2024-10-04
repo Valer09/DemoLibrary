@@ -73,12 +73,14 @@ public class BookServiceTest
 	@Test
 	void searchByTitle()
 	{
+		var auth = getAuthor();
+		var authFullName = getAuthorFullName(auth);
 		List<Book> list = new ArrayList<>(Arrays.asList(
-						Book.createTransientBook(new BookNto("title", getAuthor(), "test", LocalDate.now())),
-						Book.createTransientBook(new BookNto("titleOnStart", getAuthor(), "test", LocalDate.now())),
-						Book.createTransientBook(new BookNto("EndWithtitle", getAuthor(), "test", LocalDate.now())),
-						Book.createTransientBook(new BookNto("InTheMiddletitleIs", getAuthor(), "test", LocalDate.now())),
-						Book.createTransientBook(new BookNto("TITLEisuppercase", getAuthor(), "test", LocalDate.now()))));
+						Book.createTransientBook(new BookNto("title", "a", authFullName, auth.isni(), LocalDate.now(), auth)),
+						Book.createTransientBook(new BookNto("titleOnStart","b", authFullName, auth.isni(), LocalDate.now(), auth)),
+						Book.createTransientBook(new BookNto("EndWithtitle","c", authFullName, auth.isni(), LocalDate.now(), auth)),
+						Book.createTransientBook(new BookNto("InTheMiddletitleIs","d", authFullName, auth.isni(), LocalDate.now(), auth)),
+						Book.createTransientBook(new BookNto("TITLEisuppercase","e", authFullName, auth.isni(), LocalDate.now(), auth))));
 		
 		when(bookRepositoryMock.findByTitleContainingIgnoreCase("title")).thenReturn(list);
 		
@@ -99,8 +101,8 @@ public class BookServiceTest
 		Book book = BookHelper.getRandomBook();
 		when(bookRepositoryMock.save(any(Book.class))).thenReturn(book);
 		when(bookRepositoryMock.existsByIsbn(book.getIsbn())).thenReturn(false);
-		when(authorServiceMock.existsByCf(book.getAuthor().getCf())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(book.getAuthor().getCf())).thenReturn(Optional.of(book.getAuthor()));
+		when(authorServiceMock.existsByIsni(book.getAuthor().getIsni())).thenReturn(true);
+		when(authorServiceMock.findAuthorByCf(book.getAuthor().getIsni())).thenReturn(Optional.of(book.getAuthor()));
 		
 		BookNto addedBookNto = bookService.addBookFromNto(BookNto.fromBook(book)).get();
 		assertEquals(book.getIsbn(), addedBookNto.isbn());
@@ -163,14 +165,14 @@ public class BookServiceTest
 		
 		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(optionalBookCopy);
 		when(bookRepositoryMock.save(optionalBookCopy.get())).thenReturn(updatedBook);
-		when(authorServiceMock.existsByCf(temp.getAuthor().getCf())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(temp.getAuthor().getCf())).thenReturn(Optional.of(temp.getAuthor()));
+		when(authorServiceMock.existsByIsni(temp.getAuthor().getIsni())).thenReturn(true);
+		when(authorServiceMock.findAuthorByCf(temp.getAuthor().getIsni())).thenReturn(Optional.of(temp.getAuthor()));
 		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getCf(), temp.getPublishedDate()));
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getIsni(), temp.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.OK);
 		assertEquals(result.get().isbn(), book.getIsbn());
 		assertEquals(result.get().title(), temp.getTitle());
-		assertEquals(result.get().author().cf(), temp.getAuthor().getCf());
+		assertEquals(result.get().authorIsni(), temp.getAuthor().getIsni());
 		assertEquals(result.get().publishedDate(), temp.getPublishedDate());
 		verify(bookRepositoryMock, times(1)).save(book);
 	}
@@ -184,9 +186,9 @@ public class BookServiceTest
 		book.update(new BookUpdate(temp.getTitle(), temp.getAuthor(), temp.getPublishedDate()));
 		
 		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.of(bookCopy));
-		when(authorServiceMock.existsByCf(temp.getAuthor().getCf())).thenReturn(false);
+		when(authorServiceMock.existsByIsni(temp.getAuthor().getIsni())).thenReturn(false);
 		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getCf(), temp.getPublishedDate()));
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getIsni(), temp.getPublishedDate()));
 		
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.SERVER_ERROR);
 		
@@ -201,7 +203,7 @@ public class BookServiceTest
 		
 		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.empty());
 		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), book.getTitle(), book.getAuthor().getCf(), book.getPublishedDate()));
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), book.getTitle(), book.getAuthor().getIsni(), book.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		assertNull(result.get());
 		verify(bookRepositoryMock, never()).save(any());
@@ -209,6 +211,11 @@ public class BookServiceTest
 	
 	private static AuthorNto getAuthor()
 	{
-		return new AuthorNto("g", "test", "test", LocalDate.now());
+		return new AuthorNto("g", "test", "test", "test"+" "+"test", LocalDate.now());
+	}
+	
+	private static String getAuthorFullName(AuthorNto author)
+	{
+		return author.name() + " " + author.lastName();
 	}
 }

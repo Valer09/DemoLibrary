@@ -51,10 +51,10 @@ public class BookService
 	public ServiceResponse<BookNto> addBookFromNto(BookNto book)
 	{
 		if (bookRepository.existsByIsbn(book.isbn())) return ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists");
-		if (!authorService.existsByCf(book.author().cf())) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "author not found");
+		if (!authorService.existsByIsni(book.authorIsni())) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "author not found");
 		
 		@SuppressWarnings("OptionalGetWithoutIsPresent")
-		Author authorByCf = authorService.findAuthorByCf(book.author().cf()).get();
+		Author authorByCf = authorService.findAuthorByCf(book.authorIsni()).get();
 		
 		Hibernate.initialize(authorByCf.getBooks());
 		
@@ -80,9 +80,9 @@ public class BookService
 		var book = bookRepository.findByIsbn(bookUpdateNto.isbn());
 		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
 		
-		String authorCf = bookUpdateNto.authorCf();
+		String authorCf = bookUpdateNto.authorIsni();
 		
-		if(!authorService.existsByCf(authorCf)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
+		if(!authorService.existsByIsni(authorCf)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
 		
 		var author = authorService.findAuthorByCf(authorCf);
 		if(author.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author was null");

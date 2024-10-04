@@ -17,7 +17,7 @@ public interface IAuthorRepository extends JpaRepository<Author, Long>
 	
 	void deleteByIsbn(String isbn);*/
 	
-	boolean existsByCf(String cf);
+	boolean existsByIsni(String isni);
 	
-	Optional<Author> findByCf(String cf);
+	Optional<Author> findByIsni(String isni);
 }

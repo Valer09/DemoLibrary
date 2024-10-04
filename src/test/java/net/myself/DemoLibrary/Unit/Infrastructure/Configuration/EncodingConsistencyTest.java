@@ -18,34 +18,34 @@ public class EncodingConsistencyTest
 	@Test
 	void entityNtoTest()
 	{
-		BookNto bookNto = new BookNto("Françoise Sagan", getStaticAuthor("ABC123XYZ"), "123-4567890123", LocalDate.now());
+		var author = getStaticAuthor();
+		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), author);
 		
 		Book bookEntity = Book.createTransientBook(bookNto);
 		
 		Assertions.assertThat(new String(bookNto.title().getBytes(StandardCharsets.UTF_8))).isEqualTo(bookEntity.getTitle());
 		Assertions.assertThat(new String(bookNto.isbn().getBytes(StandardCharsets.UTF_8))).isEqualTo(bookEntity.getIsbn());
-		Assertions.assertThat(new String(bookNto.author().name().getBytes(StandardCharsets.UTF_8))).isEqualTo(bookEntity.getAuthor().getName());
+		Assertions.assertThat(new String(bookNto.author().getBytes(StandardCharsets.UTF_8))).isEqualTo(bookEntity.getAuthor().getFullName());
 		
 		Assertions.assertThat(bookNto.title()).isEqualTo(bookEntity.getTitle());
 		Assertions.assertThat(bookNto.isbn()).isEqualTo(bookEntity.getIsbn());
-		Assertions.assertThat(bookNto.author().name()).isEqualTo(bookEntity.getAuthor().getName());
+		Assertions.assertThat(bookNto.author()).isEqualTo(bookEntity.getAuthor().getFullName());
 	}
 	
 	@Test
 	void jacksonTest() throws Exception
 	{
-		
-		BookNto bookNto = new BookNto("Françoise Sagan", getStaticAuthor("ABC123XYZ"), "123-4567890123", LocalDate.now());
-		var x = jackson.writeValueAsString(bookNto);
-		BookNto fromJson = jackson.readValue(x, BookNto.class);
+		var author = getStaticAuthor();
+		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), author);
+		BookNto fromJson = jackson.readValue(jackson.writeValueAsString(bookNto), BookNto.class);
 		
 		Assertions.assertThat(bookNto.title()).isEqualTo(fromJson.title());
 		Assertions.assertThat(bookNto.isbn()).isEqualTo(fromJson.isbn());
-		Assertions.assertThat(bookNto.author().name()).isEqualTo(fromJson.author().name());
+		Assertions.assertThat(bookNto.author()).isEqualTo(fromJson.author());
 	}
 	
-	private AuthorNto getStaticAuthor(String cf)
+	private AuthorNto getStaticAuthor()
 	{
-		return new AuthorNto(cf, "Françoise", "Sagan", LocalDate.now());
+		return new AuthorNto("ABC123XYZ", "Françoise", "Sagan", "Françoise"+" "+"Sagan", LocalDate.now());
 	}
 }

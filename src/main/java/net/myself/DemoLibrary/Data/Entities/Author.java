@@ -11,52 +11,52 @@ public class Author
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	@Column(nullable = false, unique = true)
-	private String cf;
+	private String isni;
 	@Column(nullable = false)
 	private String name;
 	@Column(nullable = false)
-	private String surname;
+	private String lastName;
 	@Column()
 	private LocalDate birth;
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 	private List<Book> books;
 	
 	public Author(){}
-	public Author(long id, String cf, String name, String surname, LocalDate birth, List<Book> books)
+	public Author(long id, String isni, String name, String lastName, LocalDate birth, List<Book> books)
 	{
 		this.id = id;
-		this.cf = cf;
+		this.isni = isni;
 		this.name = name;
-		this.surname = surname;
+		this.lastName = lastName;
 		this.birth = birth;
 		this.books = books;
 	}
 	
-	public Author(String cf, String name, String surname, LocalDate birth, List<Book> books)
+	public Author(String isni, String name, String lastName, LocalDate birth, List<Book> books)
 	{
-		this.cf = cf;
+		this.isni = isni;
 		this.name = name;
-		this.surname = surname;
+		this.lastName = lastName;
 		this.birth = birth;
 		this.books = books;
 	}
 	
-	public Author(String cf, String name, String surname, LocalDate birth)
+	public Author(String isni, String name, String lastName, LocalDate birth)
 	{
-		this.cf = cf;
+		this.isni = isni;
 		this.name = name;
-		this.surname = surname;
+		this.lastName = lastName;
 		this.birth = birth;
 	}
 	
 	public static Author createTransientAuthor(AuthorNto authorNto)
 	{
-		return new Author(authorNto.cf(), authorNto.name(), authorNto.surname(), authorNto.birth());
+		return new Author(authorNto.isni(), authorNto.name(), authorNto.lastName(), authorNto.birth());
 	}
 	
-	public String getCf()
+	public String getIsni()
 	{
-		return cf;
+		return isni;
 	}
 	
 	public long getId()
@@ -69,9 +69,14 @@ public class Author
 		return name;
 	}
 	
-	public String getSurname()
+	public String getFullName()
 	{
-		return surname;
+		return name+" "+ lastName;
+	}
+	
+	public String getLastname()
+	{
+		return lastName;
 	}
 	
 	public LocalDate getBirth()

@@ -18,15 +18,15 @@ public class AuthorService
 	@Autowired
 	private IAuthorRepository authorRepository;
 	
-	public boolean existsByCf(String cf)
+	public boolean existsByIsni(String isni)
 	{
-		return authorRepository.existsByCf(cf);
+		return authorRepository.existsByIsni(isni);
 	}
 	
 	@Transactional
 	public ServiceResponse<AuthorNto> addAuthorNto(AuthorNto authorNto)
 	{
-		if (authorRepository.existsByCf(authorNto.cf())) return ServiceResponse.createError(ServiceResult.CONFLICT, "author already exists");
+		if (authorRepository.existsByIsni(authorNto.isni())) return ServiceResponse.createError(ServiceResult.CONFLICT, "author already exists");
 		return ServiceResponse.createOk(AuthorNto.fromAuthor(authorRepository.save(Author.createTransientAuthor(authorNto))));
 	}
 	
@@ -37,6 +37,6 @@ public class AuthorService
 	
 	public Optional<Author> findAuthorByCf(String cf)
 	{
-		return authorRepository.findByCf(cf);
+		return authorRepository.findByIsni(cf);
 	}
 }

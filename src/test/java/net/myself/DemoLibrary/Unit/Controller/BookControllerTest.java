@@ -6,7 +6,7 @@ import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
-import net.myself.DemoLibrary.Helper.BookControllerRequestMap;
+import net.myself.DemoLibrary.Helper.BookControllerEndPointsMap;
 import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
@@ -53,7 +53,7 @@ class BookControllerTest
 		
 		when(bookService.getAllBooksNto()).thenReturn(bookList.stream().map(BookNto::fromBook).collect(Collectors.toList()));
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.getAllBooks())
+		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.getAllBooks())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(4)))
 						.andReturn();
@@ -65,7 +65,7 @@ class BookControllerTest
 			BookNto b = response.get(i);
 			Assertions.assertThat(b.isbn()).isEqualTo(bookList.get(i).getIsbn());
 			Assertions.assertThat(b.title()).isEqualTo(bookList.get(i).getTitle());
-			Assertions.assertThat(b.author().cf()).isEqualTo(bookList.get(i).getAuthor().getCf());
+			Assertions.assertThat(b.authorIsni()).isEqualTo(bookList.get(i).getAuthor().getIsni());
 		}
 		
 		verify(bookService, times(1)).getAllBooksNto();
@@ -75,10 +75,10 @@ class BookControllerTest
 	void findByIsbn() throws Exception
 	{
 		String isbn = "abcd";
+		AuthorNto aut = getAuthor();
+		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(), aut)));
 		
-		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",getAuthor(), isbn,LocalDate.now())));
-		
-		mockMvc.perform(BookControllerRequestMap.findByIbsn(isbn))
+		mockMvc.perform(BookControllerEndPointsMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
 		
@@ -89,15 +89,17 @@ class BookControllerTest
 	void findByTitle() throws Exception
 	{
 		String title = "title";
+		AuthorNto aut = getAuthor();
+		AuthorNto aut2 = getAuthor();
 		List<BookNto> books = new ArrayList<>(Arrays.asList
 						(
-										new BookNto(title,getAuthor(),"abcd",LocalDate.now()),
-										new BookNto(title,getAuthor(),"zxy",LocalDate.now())
+										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), aut),
+										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2)
 						));
 		
 		when(bookService.findByTitleNto(title)).thenReturn(books);
 		
-		mockMvc.perform(BookControllerRequestMap.findByTitle(title))
+		mockMvc.perform(BookControllerEndPointsMap.findByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
@@ -110,16 +112,18 @@ class BookControllerTest
 	void searchByTitle() throws Exception
 	{
 		String title = "Title";
+		AuthorNto aut = getAuthor();
+		AuthorNto aut2 = getAuthor();
 		List<BookNto> books = new ArrayList<>(Arrays.asList
 						(
-										new BookNto(title,getAuthor(),"abcd",LocalDate.now()),
-										new BookNto(title,getAuthor(),"zxy",LocalDate.now()),
-										new BookNto("contains"+title,getAuthor(),"zxy",LocalDate.now())
-						));
+										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), aut),
+										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2),
+										new BookNto("contains"+title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2))
+						);
 		
 		when(bookService.findByTitleContainingIgnoreCaseNto(title)).thenReturn(books);
 		
-		mockMvc.perform(BookControllerRequestMap.searchByTitle(title))
+		mockMvc.perform(BookControllerEndPointsMap.searchByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
@@ -133,10 +137,12 @@ class BookControllerTest
 	void addBook() throws Exception
 	{
 		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
+		var serialized = jackson.writeValueAsString(book);
+		var deserialized = jackson.readValue(serialized, BookNto.class);
 		
-		when(bookService.addBookFromNto(book)).thenReturn(ServiceResponse.createOk(book));
+		when(bookService.addBookFromNto(deserialized)).thenReturn(ServiceResponse.createOk(book));
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerRequestMap.addBook(jackson.writeValueAsString(book)))
+		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.addBook(serialized))
 						.andDo(print())
 						.andExpect(status().isCreated())
 						.andReturn();
@@ -148,7 +154,7 @@ class BookControllerTest
 		Assertions.assertThat(addedBook.isbn()).isEqualTo(book.isbn());
 		Assertions.assertThat(addedBook.publishedDate()).isEqualTo(book.publishedDate());
 		
-		verify(bookService, times(1)).addBookFromNto(book);
+		verify(bookService, times(1)).addBookFromNto(deserialized);
 	}
 	
 	@Test
@@ -180,20 +186,20 @@ class BookControllerTest
 	{
 		Book book = BookHelper.getRandomBook();
 		AuthorNto author = getAuthor();
-		BookNto newBook = new BookNto(book.getTitle()+"ed", author, book.getIsbn(), LocalDate.now().minus(3, ChronoUnit.YEARS));
+		BookNto newBook = new BookNto(book.getTitle()+"ed", book.getIsbn(), author.fullName(), author.isni(), LocalDate.now().minus(3, ChronoUnit.YEARS), author);
 		
-		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.author().cf(), newBook.publishedDate());
+		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
 		
 		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createOk(newBook));
 		
 		MvcResult mvcResult = performUpdate(nto).andExpect(status().isOk()).andReturn();
 		
-		Book updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), Book.class);
+		BookNto updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), BookNto.class);
 		
-		Assertions.assertThat(updatedBook.getTitle()).isEqualTo(newBook.title());
-		Assertions.assertThat(updatedBook.getAuthor().getCf()).isEqualTo(newBook.author().cf());
-		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(book.getIsbn());
-		Assertions.assertThat(updatedBook.getPublishedDate()).isEqualTo(newBook.publishedDate());
+		Assertions.assertThat(updatedBook.title()).isEqualTo(newBook.title());
+		Assertions.assertThat(updatedBook.authorIsni()).isEqualTo(newBook.authorIsni());
+		Assertions.assertThat(updatedBook.isbn()).isEqualTo(book.getIsbn());
+		Assertions.assertThat(updatedBook.publishedDate()).isEqualTo(newBook.publishedDate());
 		
 		verify(bookService, times(1)).updateBookFromNto(nto);
 	}
@@ -203,9 +209,9 @@ class BookControllerTest
 	{
 		Book book = BookHelper.getRandomBook();
 		AuthorNto author = getAuthor();
-		BookNto newBook = new BookNto(book.getTitle()+"ed", author, book.getIsbn(), LocalDate.now().minus(3, ChronoUnit.YEARS));
+		BookNto newBook = new BookNto(book.getTitle()+"ed", book.getIsbn(), author.fullName(), author.isni(), LocalDate.now().minus(3, ChronoUnit.YEARS), author);
 		
-		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.author().cf(), newBook.publishedDate());
+		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
 		
 		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
@@ -216,16 +222,16 @@ class BookControllerTest
 	
 	private static AuthorNto getAuthor()
 	{
-		return new AuthorNto("A", "test", "test", LocalDate.now());
+		return new AuthorNto("A", "test", "test", "test test", LocalDate.now());
 	}
 	
 	private ResultActions performDeleteByIsbn(Book book) throws Exception
 	{
-		return mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book)).andDo(print());
+		return mockMvc.perform(BookControllerEndPointsMap.deleteBookByIsbn(book)).andDo(print());
 	}
 	
 	private ResultActions performUpdate(BookUpdateNto nto) throws Exception
 	{
-		return mockMvc.perform(BookControllerRequestMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
+		return mockMvc.perform(BookControllerEndPointsMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
 	}
 }

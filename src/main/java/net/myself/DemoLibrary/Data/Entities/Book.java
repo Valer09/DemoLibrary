@@ -39,7 +39,7 @@ public class Book
 	
 	public static Book createTransientBook(BookNto bookNto)
 	{
-		return new Book(bookNto.title(), Author.createTransientAuthor(bookNto.author()), bookNto.isbn(), bookNto.publishedDate());
+		return new Book(bookNto.title(), Author.createTransientAuthor(bookNto.authorNto()), bookNto.isbn(), bookNto.publishedDate());
 	}
 	
 	public static Book createTransientBook(BookNto bookNto, Author author)
