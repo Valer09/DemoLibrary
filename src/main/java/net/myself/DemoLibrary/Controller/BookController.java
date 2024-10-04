@@ -15,7 +15,7 @@ import java.util.List;
 // Move isbn modification to specific http request
 // Implements Book->Author association modification
 // Test for new service and repository of author
-// Verify unused constructors in Book are still necessary for jpa
+
 @RestController
 @RequestMapping(value = "/books", produces = MediaType.APPLICATION_JSON_VALUE)
 public class BookController

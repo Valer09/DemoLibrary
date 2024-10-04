@@ -2,24 +2,25 @@ package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.time.LocalDate;
 
 @Entity
 public class Book
 {
-	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 	@Column(nullable = false, unique = true)
 	private String isbn;
+	private String title;
+	private LocalDate publishedDate;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "author_id")
 	private Author author;
-	private String title;
-	private LocalDate publishedDate;
 	
+	@PersistenceConstructor
 	public Book(){}
 	public Book(long id, String title, Author author, String isbn, LocalDate publishedDate)
 	{
@@ -29,6 +30,7 @@ public class Book
 		this.setIsbn(isbn);
 		this.setPublishedDate(publishedDate);
 	}
+	
 	private Book(String title, Author author, String isbn, LocalDate publishedDate)
 	{
 		this.setTitle(title);
