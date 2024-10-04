@@ -4,6 +4,9 @@ import org.apache.logging.log4j.util.Strings;
 
 public class ServiceResponse<T>
 {
+	private final T objectResult;
+	private final ServiceResult result;
+	private final String message;
 	
 	private ServiceResponse(T objectResult, ServiceResult result, String message)
 	{
@@ -11,18 +14,15 @@ public class ServiceResponse<T>
 		this.result = result;
 		this.message = message;
 	}
-	private T objectResult;
-	private ServiceResult result;
-	private String message;
 	
 	public static <T> ServiceResponse<T> createOk(T get)
 	{
-		return new ServiceResponse<T>(get, ServiceResult.OK, Strings.EMPTY);
+		return new ServiceResponse<>(get, ServiceResult.OK, Strings.EMPTY);
 	}
 	
 	public static <T> ServiceResponse<T> createError(ServiceResult serviceResult, String error)
 	{
-		return new ServiceResponse<T>(null, serviceResult, error);
+		return new ServiceResponse<>(null, serviceResult, error);
 	}
 	
 	public T get()
@@ -34,7 +34,10 @@ public class ServiceResponse<T>
 	{
 		return result;
 	}
-	
+	public boolean isOk()
+	{
+		return result.equals(ServiceResult.OK);
+	}
 	public String getMessage()
 	{
 		return message;

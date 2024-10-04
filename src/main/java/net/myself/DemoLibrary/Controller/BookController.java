@@ -11,7 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: REDESIGN NTOs. Edit author isni with isni. Make booNto to have only authorName and identifier not all the object
+//TODO: REDESIGN NTOs. Edit author isni with isni. Make booNto to have only authorName and identifier not all the object.
+// Move isbn modification to specific http request
+// Implements Book->Author association modification
+// Test for new service and repository of author
+// Verify unused constructors in Book are still necessary for jpa
 @RestController
 @RequestMapping(value = "/books", produces = MediaType.APPLICATION_JSON_VALUE)
 public class BookController

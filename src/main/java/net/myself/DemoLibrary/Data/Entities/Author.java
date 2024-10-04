@@ -1,6 +1,8 @@
 package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
+import net.myself.DemoLibrary.Model.AuthorUpdate;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -62,6 +64,13 @@ public class Author
 	public long getId()
 	{
 		return id;
+	}
+	
+	public void update(AuthorUpdate authorUpdate)
+	{
+		this.name = authorUpdate.name();
+		this.lastName = authorUpdate.lastName();
+		this.birth = authorUpdate.birth();
 	}
 	
 	public String getName()

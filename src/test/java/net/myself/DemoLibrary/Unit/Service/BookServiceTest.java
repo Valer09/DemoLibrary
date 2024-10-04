@@ -8,6 +8,7 @@ import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.BookService;
+import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -102,7 +103,7 @@ public class BookServiceTest
 		when(bookRepositoryMock.save(any(Book.class))).thenReturn(book);
 		when(bookRepositoryMock.existsByIsbn(book.getIsbn())).thenReturn(false);
 		when(authorServiceMock.existsByIsni(book.getAuthor().getIsni())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(book.getAuthor().getIsni())).thenReturn(Optional.of(book.getAuthor()));
+		when(authorServiceMock.findAuthorByIsni(book.getAuthor().getIsni())).thenReturn(ServiceResponse.createOk(book.getAuthor()));
 		
 		BookNto addedBookNto = bookService.addBookFromNto(BookNto.fromBook(book)).get();
 		assertEquals(book.getIsbn(), addedBookNto.isbn());
@@ -166,7 +167,7 @@ public class BookServiceTest
 		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(optionalBookCopy);
 		when(bookRepositoryMock.save(optionalBookCopy.get())).thenReturn(updatedBook);
 		when(authorServiceMock.existsByIsni(temp.getAuthor().getIsni())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(temp.getAuthor().getIsni())).thenReturn(Optional.of(temp.getAuthor()));
+		when(authorServiceMock.findAuthorByIsni(temp.getAuthor().getIsni())).thenReturn(ServiceResponse.createOk(temp.getAuthor()));
 		
 		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getIsni(), temp.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.OK);
@@ -192,7 +193,7 @@ public class BookServiceTest
 		
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.SERVER_ERROR);
 		
-		verify(authorServiceMock,never()).findAuthorByCf(any());
+		verify(authorServiceMock,never()).findAuthorByIsni(any());
 		verify(bookRepositoryMock,never()).save(any());
 	}
 	

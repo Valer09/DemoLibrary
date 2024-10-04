@@ -1,7 +1,8 @@
 package net.myself.DemoLibrary.Controller;
-
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
+import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
 import net.myself.DemoLibrary.Service.AuthorService;
+import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,5 +33,43 @@ public class AuthorController
 	public ResponseEntity<List<AuthorNto>> getAllAuthors()
 	{
 		return new ResponseEntity<>(authorService.getAllAuthorsNto(), HttpStatus.OK);
+	}
+	
+	@GetMapping("/findByIsni")
+	public ResponseEntity<AuthorNto> findAuthorByIsni(@RequestParam("isni") String isni)
+	{
+		var saved = authorService.findAuthorByIsniNto(isni);
+		return switch(saved.getResult())
+						{
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							case OK -> new ResponseEntity<>(saved.get(), HttpStatus.OK);
+							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+						};
+	}
+	
+	@PutMapping("/update")
+	public ResponseEntity<AuthorNto> updateAuthor(@RequestBody AuthorUpdateNto authorUpdateNto)
+	{
+		ServiceResponse<AuthorNto> authorServiceResponse = authorService.updateAuthorFromNto(authorUpdateNto);
+		return switch(authorServiceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
+							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+						};
+	}
+	
+	@PutMapping("/updateIsni")
+	public ResponseEntity<Integer> updateIsni(@RequestParam("isni") String isni, @RequestParam("newIsni") String newIsni)
+	{
+		ServiceResponse<Integer> authorServiceResponse = authorService.updateIsni(isni, newIsni);
+		return switch(authorServiceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.NOT_FOUND);
+							case CONFLICT -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.CONFLICT);
+							default -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.INTERNAL_SERVER_ERROR);
+						};
 	}
 }

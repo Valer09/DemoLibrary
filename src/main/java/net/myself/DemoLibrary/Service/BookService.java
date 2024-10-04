@@ -53,8 +53,7 @@ public class BookService
 		if (bookRepository.existsByIsbn(book.isbn())) return ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists");
 		if (!authorService.existsByIsni(book.authorIsni())) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "author not found");
 		
-		@SuppressWarnings("OptionalGetWithoutIsPresent")
-		Author authorByCf = authorService.findAuthorByCf(book.authorIsni()).get();
+		Author authorByCf = authorService.findAuthorByIsni(book.authorIsni()).get();
 		
 		Hibernate.initialize(authorByCf.getBooks());
 		
@@ -80,12 +79,12 @@ public class BookService
 		var book = bookRepository.findByIsbn(bookUpdateNto.isbn());
 		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
 		
-		String authorCf = bookUpdateNto.authorIsni();
+		String authorIsni = bookUpdateNto.authorIsni();
 		
-		if(!authorService.existsByIsni(authorCf)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
+		if(!authorService.existsByIsni(authorIsni)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
 		
-		var author = authorService.findAuthorByCf(authorCf);
-		if(author.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author was null");
+		var author = authorService.findAuthorByIsni(authorIsni);
+		if(!author.isOk()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal Server error");
 		
 		Hibernate.initialize(author.get().getBooks());
 		
