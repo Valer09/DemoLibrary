@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: REDESIGN NTOs
+//TODO: REDESIGN NTOs. Edit author cf with isni. Make booNto to have only authorName and identifier not all the object
 @RestController
 @RequestMapping(value = "/books", produces = MediaType.APPLICATION_JSON_VALUE)
 public class BookController
@@ -65,19 +65,7 @@ public class BookController
 		
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
-	
-	@DeleteMapping("/delete")
-	public ResponseEntity<String> deleteBook(@RequestBody BookNto book)
-	{
-		return switch(bookService.deleteBookFromNto(book).getResult())
-						{
-							case OK -> new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
-							case NOT_FOUND -> new ResponseEntity<>("No book found with the given title and ISBN", HttpStatus.NOT_FOUND);
-							case CONFLICT -> new ResponseEntity<>("Multiple books found. Please specify more criteria.", HttpStatus.CONFLICT);
-							default -> new ResponseEntity<>("Internal Server Error.", HttpStatus.INTERNAL_SERVER_ERROR);
-						};
-	}
-	
+
 	@PutMapping("/update")
 	public ResponseEntity<BookNto> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
 	{

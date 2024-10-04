@@ -6,7 +6,6 @@ import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
-import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookControllerRequestMap;
 import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Service.BookService;
@@ -23,11 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -178,49 +176,13 @@ class BookControllerTest
 	}
 	
 	@Test
-	void deleteBook() throws Exception
-	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		
-		String jsonBook = jackson.writeValueAsString(book);
-		
-		when(bookService.deleteBookFromNto(book)).thenReturn(ServiceResponse.createOk(""));
-		
-		performDeleteBook(jsonBook).andExpect(status().isOk());
-		
-		verify(bookService, times(1)).deleteBookFromNto(book);
-	}
-	
-	@Test
-	void deleteBookConflict() throws Exception
-	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		
-		when(bookService.deleteBookFromNto(book)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT,""));
-		
-		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isConflict());
-		
-		verify(bookService, times(1)).deleteBookFromNto(book);
-	}
-	
-	@Test
-	void deleteBookNotFound() throws Exception
-	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		
-		when(bookService.deleteBookFromNto(book)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
-		
-		performDeleteBook(jackson.writeValueAsString(book)).andExpect(status().isNotFound());
-		
-		verify(bookService, times(1)).deleteBookFromNto(book);
-	}
-	
-	@Test
 	void updateBook() throws Exception
 	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		BookNto newBook = new BookNto(book.title()+"ed", getAuthor(), book.isbn(), book.publishedDate());
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
+		Book book = BookHelper.getRandomBook();
+		AuthorNto author = getAuthor();
+		BookNto newBook = new BookNto(book.getTitle()+"ed", author, book.getIsbn(), LocalDate.now().minus(3, ChronoUnit.YEARS));
+		
+		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.author().cf(), newBook.publishedDate());
 		
 		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createOk(newBook));
 		
@@ -230,22 +192,8 @@ class BookControllerTest
 		
 		Assertions.assertThat(updatedBook.getTitle()).isEqualTo(newBook.title());
 		Assertions.assertThat(updatedBook.getAuthor().getCf()).isEqualTo(newBook.author().cf());
-		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(newBook.isbn());
+		Assertions.assertThat(updatedBook.getIsbn()).isEqualTo(book.getIsbn());
 		Assertions.assertThat(updatedBook.getPublishedDate()).isEqualTo(newBook.publishedDate());
-		
-		verify(bookService, times(1)).updateBookFromNto(nto);
-	}
-	
-	@Test
-	void updateBookConflict() throws Exception
-	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		BookNto newBook = new BookNto(book.title()+"ed", getAuthor(), book.isbn(), book.publishedDate());
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
-		
-		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT, ""));
-		
-		performUpdate(nto).andExpect(status().isConflict());
 		
 		verify(bookService, times(1)).updateBookFromNto(nto);
 	}
@@ -253,9 +201,11 @@ class BookControllerTest
 	@Test
 	void updateBookNotFound() throws Exception
 	{
-		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
-		BookNto newBook = new BookNto(book.title()+"ed", getAuthor(), book.isbn(), book.publishedDate());
-		BookUpdateNto nto = new BookUpdateNto(book, newBook);
+		Book book = BookHelper.getRandomBook();
+		AuthorNto author = getAuthor();
+		BookNto newBook = new BookNto(book.getTitle()+"ed", author, book.getIsbn(), LocalDate.now().minus(3, ChronoUnit.YEARS));
+		
+		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.author().cf(), newBook.publishedDate());
 		
 		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
 		
@@ -272,11 +222,6 @@ class BookControllerTest
 	private ResultActions performDeleteByIsbn(Book book) throws Exception
 	{
 		return mockMvc.perform(BookControllerRequestMap.deleteBookByIsbn(book)).andDo(print());
-	}
-	
-	private ResultActions performDeleteBook(String jsonBook) throws Exception
-	{
-		return mockMvc.perform(BookControllerRequestMap.deleteBook(jsonBook)).andDo(print());
 	}
 	
 	private ResultActions performUpdate(BookUpdateNto nto) throws Exception

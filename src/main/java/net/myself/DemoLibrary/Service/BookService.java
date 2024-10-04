@@ -7,6 +7,7 @@ import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.VisibleForTesting;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
+import net.myself.DemoLibrary.Model.BookUpdate;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,26 +75,12 @@ public class BookService
 	}
 	
 	@Transactional
-	public ServiceResponse<String> deleteBookFromNto(BookNto book)
-	{
-		List<Book> books = bookRepository.findByTitleAndIsbn(book.title(), book.isbn());
-		
-		if (books.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "No book found with the given title and ISBN");
-		else if (books.size() > 1) return ServiceResponse.createError(ServiceResult.CONFLICT, "Multiple books found. Please specify more criteria.");
-		
-		bookRepository.delete(books.get(0));
-		_logger.trace("deleted object book with id "+books.get(0).getId());
-		
-		return ServiceResponse.createOk("Book deleted successfully");
-	}
-	
-	@Transactional
 	public ServiceResponse<BookNto> updateBookFromNto(BookUpdateNto bookUpdateNto)
 	{
-		var books = bookRepository.findByTitleAndIsbn(bookUpdateNto.oldBook().title(), bookUpdateNto.oldBook().isbn());
-		if(books.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
-		if(books.size() > 1) return ServiceResponse.createError(ServiceResult.CONFLICT, "Multiple books found");
-		String authorCf = bookUpdateNto.newBook().author().cf();
+		var book = bookRepository.findByIsbn(bookUpdateNto.isbn());
+		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
+		
+		String authorCf = bookUpdateNto.authorCf();
 		
 		if(!authorService.existsByCf(authorCf)) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Author not found");
 		
@@ -102,9 +89,8 @@ public class BookService
 		
 		Hibernate.initialize(author.get().getBooks());
 		
-		var book = books.get(0);
-		book.update(Book.createTransientBook(bookUpdateNto.newBook(), author.get()));
-		var saved = bookRepository.save(book);
+		book.get().update(new BookUpdate(bookUpdateNto.title(), author.get(), bookUpdateNto.publishedDate()));
+		var saved = bookRepository.save(book.get());
 		
 		_logger.trace(MessageFormat.format("Book with id %d updated", +saved.getId()));
 		

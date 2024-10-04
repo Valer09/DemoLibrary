@@ -1,5 +1,6 @@
 package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
+import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 
 import java.time.LocalDate;
@@ -71,12 +72,11 @@ public class Book
 		return publishedDate;
 	}
 	
-	public void update(Book newBook)
+	public void update(BookUpdate newBook)
 	{
-		setTitle(newBook.getTitle());
-		setAuthor(newBook.getAuthor());
-		setIsbn(newBook.getIsbn());
-		setPublishedDate(newBook.getPublishedDate());
+		setTitle(newBook.title());
+		setAuthor(newBook.author());
+		setPublishedDate(newBook.publishedDate());
 	}
 	
 	private void setTitle(String title)

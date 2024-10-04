@@ -3,9 +3,9 @@ import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
-import net.myself.DemoLibrary.Data.Repository.IAuthorRepository;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookHelper;
+import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResult;
@@ -64,7 +64,7 @@ public class BookServiceTest
 	void findByTitle()
 	{
 		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByTitle(book.getTitle())).thenReturn(new ArrayList<>(Arrays.asList(book)));
+		when(bookRepositoryMock.findByTitle(book.getTitle())).thenReturn(new ArrayList<>(List.of(book)));
 		var foundBook = bookService.findByTitleNto(book.getTitle()).get(0);
 		assertEquals(foundBook.isbn(), book.getIsbn());
 		verify(bookRepositoryMock, times(1)).findByTitle(book.getTitle());
@@ -153,108 +153,55 @@ public class BookServiceTest
 	}
 	
 	@Test
-	void deleteBook()
-	{
-		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
-		Assertions.assertThat(bookService.deleteBookFromNto(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.OK);
-		verify(bookRepositoryMock, times(1)).delete(book);
-	}
-	
-	@Test
-	void deleteBookConflict()
-	{
-		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
-		Assertions.assertThat(bookService.deleteBookFromNto(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.CONFLICT);
-		verify(bookRepositoryMock, never()).delete(any());
-	}
-	
-	@Test
-	void deleteBookNotFound()
-	{
-		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>());
-		Assertions.assertThat(bookService.deleteBookFromNto(BookNto.fromBook(book)).getResult()).isEqualTo(ServiceResult.NOT_FOUND);
-		verify(bookRepositoryMock, never()).delete(any());
-	}
-	
-	@Test
 	void updateBook()
 	{
 		Book book = BookHelper.getRandomBook();
 		Book temp = BookHelper.getRandomBook();
-		Book bookCopy =  Book.createTransientBook(BookNto.fromBook(book));
-		bookCopy.update(temp);
-		BookNto bookNto = BookNto.fromBook(temp);
+		Book updatedBook =  Book.createTransientBook(BookNto.fromBook(book));
+		updatedBook.update(new BookUpdate(temp.getTitle(), temp.getAuthor(), temp.getPublishedDate()));
+		Optional<Book> optionalBookCopy = Optional.of(book);
 		
+		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(optionalBookCopy);
+		when(bookRepositoryMock.save(optionalBookCopy.get())).thenReturn(updatedBook);
+		when(authorServiceMock.existsByCf(temp.getAuthor().getCf())).thenReturn(true);
+		when(authorServiceMock.findAuthorByCf(temp.getAuthor().getCf())).thenReturn(Optional.of(temp.getAuthor()));
 		
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book)));
-		when(bookRepositoryMock.save(book)).thenReturn(bookCopy);
-		when(authorServiceMock.existsByCf(bookCopy.getAuthor().getCf())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(bookCopy.getAuthor().getCf())).thenReturn(Optional.of(bookCopy.getAuthor()));
-		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(BookNto.fromBook(book), bookNto));
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getCf(), temp.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.OK);
 		assertEquals(result.get().isbn(), book.getIsbn());
-		assertEquals(result.get().title(), bookCopy.getTitle());
-		assertEquals(result.get().author().cf(), bookCopy.getAuthor().getCf());
-		assertEquals(result.get().isbn(), bookCopy.getIsbn());
-		assertEquals(result.get().publishedDate(), bookCopy.getPublishedDate());
+		assertEquals(result.get().title(), temp.getTitle());
+		assertEquals(result.get().author().cf(), temp.getAuthor().getCf());
+		assertEquals(result.get().publishedDate(), temp.getPublishedDate());
 		verify(bookRepositoryMock, times(1)).save(book);
 	}
 	
 	@Test
-	void updateBookWithDifferentAuthor()
+	void updateBookAuthorNotFound()
 	{
 		Book book = BookHelper.getRandomBook();
-		BookNto oldBookNto =  BookNto.fromBook(book);
-		book.update(BookHelper.getRandomBook());
-		BookUpdateNto bookUpdateNto = new BookUpdateNto(oldBookNto,  BookNto.fromBook(book));
+		Book temp = BookHelper.getRandomBook();
+		Book bookCopy =  Book.createTransientBook(BookNto.fromBook(book));
+		book.update(new BookUpdate(temp.getTitle(), temp.getAuthor(), temp.getPublishedDate()));
 		
-		when(bookRepositoryMock.findByTitleAndIsbn(bookUpdateNto.oldBook().title(), bookUpdateNto.oldBook().isbn())).thenReturn(new ArrayList<>(List.of(book)));
-		when(authorServiceMock.existsByCf(book.getAuthor().getCf())).thenReturn(true);
-		when(authorServiceMock.findAuthorByCf(book.getAuthor().getCf())).thenReturn(Optional.of(book.getAuthor()));
-		when(bookRepositoryMock.save(book)).thenReturn(book);
+		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.of(bookCopy));
+		when(authorServiceMock.existsByCf(temp.getAuthor().getCf())).thenReturn(false);
 		
-		Assertions.assertThat(bookService.updateBookFromNto(bookUpdateNto).getResult()).isEqualTo(ServiceResult.OK);
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getCf(), temp.getPublishedDate()));
 		
-		verify(authorServiceMock, times(1)).findAuthorByCf(bookUpdateNto.newBook().author().cf());
-		verify(bookRepositoryMock, times(1)).save(book);
+		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.SERVER_ERROR);
 		
-		when(authorServiceMock.existsByCf(book.getAuthor().getCf())).thenReturn(false);
-		
-		Assertions.assertThat(bookService.updateBookFromNto(bookUpdateNto).getResult()).isEqualTo(ServiceResult.SERVER_ERROR);
-		
-		verify(authorServiceMock, times(1)).findAuthorByCf(any());
-		verify(bookRepositoryMock,times(1)).save(any());
-	}
-	
-	@Test
-	void updateBookConflict()
-	{
-		Book book = BookHelper.getRandomBook();
-		Book bookEdit = Book.createTransientBook(BookNto.fromBook(book));
-		bookEdit.update(BookHelper.getRandomBook());
-		
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of(book, book)));
-		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(BookNto.fromBook(book), BookNto.fromBook(bookEdit)));
-		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.CONFLICT);
-		assertNull(result.get());
-		verify(bookRepositoryMock, never()).save(any());
+		verify(authorServiceMock,never()).findAuthorByCf(any());
+		verify(bookRepositoryMock,never()).save(any());
 	}
 	
 	@Test
 	void updateBookNotFound()
 	{
 		Book book = BookHelper.getRandomBook();
-		Book bookEdit = Book.createTransientBook(BookNto.fromBook(book));
-		bookEdit.update(BookHelper.getRandomBook());
 		
-		when(bookRepositoryMock.findByTitleAndIsbn(book.getTitle(), book.getIsbn())).thenReturn(new ArrayList<>(List.of()));
+		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.empty());
 		
-		var result = bookService.updateBookFromNto(new BookUpdateNto(BookNto.fromBook(book), BookNto.fromBook(bookEdit)));
+		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), book.getTitle(), book.getAuthor().getCf(), book.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		assertNull(result.get());
 		verify(bookRepositoryMock, never()).save(any());

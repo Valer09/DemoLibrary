@@ -1,5 +1,5 @@
 package net.myself.DemoLibrary.Data.NTO;
 
-import net.myself.DemoLibrary.Data.Entities.Book;
+import java.time.LocalDate;
 
-public record BookUpdateNto(BookNto oldBook, BookNto newBook){}
+public record BookUpdateNto(String isbn, String title, String authorCf, LocalDate publishedDate){}
