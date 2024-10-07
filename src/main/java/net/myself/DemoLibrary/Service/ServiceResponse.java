@@ -38,8 +38,4 @@ public class ServiceResponse<T>
 	{
 		return result.equals(ServiceResult.OK);
 	}
-	public String getMessage()
-	{
-		return message;
-	}
 }
