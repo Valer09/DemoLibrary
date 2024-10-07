@@ -1,6 +1,7 @@
 package net.myself.DemoLibrary.Controller;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
+import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,12 @@ public class AuthorController
 							case OK -> new ResponseEntity<>(saved.get(), HttpStatus.OK);
 							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 						};
+	}
+	
+	@GetMapping("/searchByName")
+	public List<AuthorNto> searchByName(@RequestParam("name") String name)
+	{
+		return authorService.findByNameContainingIgnoreCaseNto(name);
 	}
 	
 	@PutMapping("/update")

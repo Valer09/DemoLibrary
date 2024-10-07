@@ -18,7 +18,7 @@ public class Author
 	@Column(nullable = false)
 	private String name;
 	@Column(nullable = false)
-	private String lastName;
+	private String lastname;
 	@Column()
 	private LocalDate birth;
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
@@ -27,20 +27,20 @@ public class Author
 	@PersistenceConstructor
 	public Author(){}
 	
-	public Author(String isni, String name, String lastName, LocalDate birth, List<Book> books)
+	public Author(String isni, String name, String lastname, LocalDate birth, List<Book> books)
 	{
 		this.isni = isni;
 		this.name = name;
-		this.lastName = lastName;
+		this.lastname = lastname;
 		this.birth = birth;
 		this.books = books;
 	}
 	
-	public Author(String isni, String name, String lastName, LocalDate birth)
+	public Author(String isni, String name, String lastname, LocalDate birth)
 	{
 		this.isni = isni;
 		this.name = name;
-		this.lastName = lastName;
+		this.lastname = lastname;
 		this.birth = birth;
 	}
 	
@@ -62,7 +62,7 @@ public class Author
 	public void update(AuthorUpdate authorUpdate)
 	{
 		this.name = authorUpdate.name();
-		this.lastName = authorUpdate.lastName();
+		this.lastname = authorUpdate.lastName();
 		this.birth = authorUpdate.birth();
 	}
 	
@@ -73,12 +73,12 @@ public class Author
 	
 	public String getFullName()
 	{
-		return name+" "+ lastName;
+		return name+" "+ lastname;
 	}
 	
 	public String getLastname()
 	{
-		return lastName;
+		return lastname;
 	}
 	
 	public LocalDate getBirth()

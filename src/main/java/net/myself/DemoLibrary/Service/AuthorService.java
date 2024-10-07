@@ -74,4 +74,10 @@ public class AuthorService
 		
 		return ServiceResponse.createOk(result);
 	}
+	
+	@Transactional
+	public List<AuthorNto> findByNameContainingIgnoreCaseNto(String name)
+	{
+		return authorRepository.findByNameContainingIgnoreCaseOrLastnameContainingIgnoreCase(name, name).stream().map(AuthorNto::fromAuthor).collect(Collectors.toList());
+	}
 }

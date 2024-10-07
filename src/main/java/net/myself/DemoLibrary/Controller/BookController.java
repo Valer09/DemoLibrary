@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 //TODO:
-// Implements Book->Author association modification
 // Test for new service and repository of author
 
 @RestController

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -29,4 +30,5 @@ public interface IAuthorRepository extends JpaRepository<Author, Long>
 	@Modifying
 	@Query("UPDATE Author a SET a.isni = :newIsni WHERE a.id = :authorId")
 	int updateIsniById(Long authorId, String newIsni);
+	List<Author> findByNameContainingIgnoreCaseOrLastnameContainingIgnoreCase(String name, String lastname);
 }
