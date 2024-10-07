@@ -16,11 +16,12 @@ public class BookTest
 	{
 		Book book = BookHelper.getRandomBookWithId();
 		var id = book.getId();
+		var isbn = book.getIsbn();
 		Book other = BookHelper.getRandomBook();
 		book.update(new BookUpdate(other.getTitle(), other.getAuthor(), other.getPublishedDate()));
 		Assertions.assertEquals(id, book.getId());
 		Assertions.assertEquals(book.getTitle(), other.getTitle());
-		Assertions.assertEquals(book.getIsbn(), book.getIsbn());
+		Assertions.assertEquals(book.getIsbn(), isbn);
 		Assertions.assertEquals(book.getAuthor(), other.getAuthor());
 		Assertions.assertEquals(book.getPublishedDate(), other.getPublishedDate());
 	}
@@ -35,6 +36,8 @@ public class BookTest
 		Assertions.assertEquals(first, second);
 		second.update(new BookUpdate("test", BookHelper.getRandomAuthor(), LocalDate.now().minus(4, ChronoUnit.YEARS)));
 		Assertions.assertEquals(first, second);
-		Assertions.assertEquals(first, new Book(first.getId(), "",BookHelper.getRandomAuthor(),"", LocalDate.now()));
+		Assertions.assertEquals(first, new Book(first.getId(), "",BookHelper.getRandomAuthor(),book.getIsbn(), LocalDate.now()));
+		Assertions.assertFalse(first.equals(new Book(first.getId(), "",BookHelper.getRandomAuthor(),"", LocalDate.now())));
+		Assertions.assertFalse(first.equals(new Book(first.getId()+1, "",BookHelper.getRandomAuthor(),book.getIsbn(), LocalDate.now())));
 	}
 }

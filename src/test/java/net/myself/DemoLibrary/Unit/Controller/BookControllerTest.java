@@ -1,4 +1,8 @@
 package net.myself.DemoLibrary.Unit.Controller;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.myself.DemoLibrary.Controller.BookController;
@@ -7,16 +11,22 @@ import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Helper.BookControllerEndPointsMap;
+import net.myself.DemoLibrary.Helper.BookControllerServiceExpectations;
 import net.myself.DemoLibrary.Helper.BookHelper;
+import net.myself.DemoLibrary.Helper.HttpTestCase;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,14 +36,10 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(BookController.class)
-class BookControllerTest
+public class BookControllerTest
 {
 	@Autowired
 	private ObjectMapper jackson;
@@ -43,6 +49,7 @@ class BookControllerTest
 	private BookService bookService;
 	
 	@Test
+	@DisplayName("Test get all books endpoint")
 	void getAllBooks() throws Exception
 	{
 		List<Book> bookList = new ArrayList<>(Arrays.asList(
@@ -72,6 +79,7 @@ class BookControllerTest
 	}
 	
 	@Test
+	@DisplayName("Test findByIsbn endpoint")
 	void findByIsbn() throws Exception
 	{
 		String isbn = "abcd";
@@ -86,6 +94,7 @@ class BookControllerTest
 	}
 	
 	@Test
+	@DisplayName("Test findByTitle endpoint")
 	void findByTitle() throws Exception
 	{
 		String title = "title";
@@ -109,6 +118,7 @@ class BookControllerTest
 	}
 	
 	@Test
+	@DisplayName("Test searchByTitle endpoint")
 	void searchByTitle() throws Exception
 	{
 		String title = "Title";
@@ -133,56 +143,53 @@ class BookControllerTest
 		verify(bookService, times(1)).findByTitleContainingIgnoreCaseNto(title);
 	}
 	
-	@Test
-	void addBook() throws Exception
-	{
+	@ParameterizedTest
+	@MethodSource("net.myself.DemoLibrary.Helper.HttpTestCase#addBookTestCases")
+	@DisplayName("Test addBook endpoint with various scenarios")
+	void addBookScenarios(HttpTestCase testCase) throws Exception {
 		BookNto book = BookNto.fromBook(BookHelper.getRandomBook());
 		var serialized = jackson.writeValueAsString(book);
 		var deserialized = jackson.readValue(serialized, BookNto.class);
 		
-		when(bookService.addBookFromNto(deserialized)).thenReturn(ServiceResponse.createOk(book));
+		BookControllerServiceExpectations.configureAddBookServiceExpectations(testCase, book, deserialized, bookService);
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.addBook(serialized))
-						.andDo(print())
-						.andExpect(status().isCreated())
-						.andReturn();
+		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.addBook(serialized)).andReturn();
 		
-		BookNto addedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), BookNto.class);
+		Assertions.assertThat(mvcResult.getResponse().getStatus()).isEqualTo(testCase.expectedStatus.value());
 		
-		Assertions.assertThat(addedBook.title()).isEqualTo(book.title());
-		Assertions.assertThat(addedBook.author()).isEqualTo(book.author());
-		Assertions.assertThat(addedBook.isbn()).isEqualTo(book.isbn());
-		Assertions.assertThat(addedBook.publishedDate()).isEqualTo(book.publishedDate());
-		
-		verify(bookService, times(1)).addBookFromNto(deserialized);
+		if (testCase.expectedStatus == HttpStatus.OK)
+		{
+			BookNto addedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), BookNto.class);
+			
+			Assertions.assertThat(addedBook.title()).isEqualTo(book.title());
+			Assertions.assertThat(addedBook.author()).isEqualTo(book.author());
+			Assertions.assertThat(addedBook.isbn()).isEqualTo(book.isbn());
+			Assertions.assertThat(addedBook.publishedDate()).isEqualTo(book.publishedDate());
+			
+			verify(bookService, times(1)).addBookFromNto(deserialized);
+		}
 	}
 	
-	@Test
-	void deleteBookByIsbn() throws Exception
+	@ParameterizedTest
+	@MethodSource("net.myself.DemoLibrary.Helper.HttpTestCase#deleteBookByIsbn")
+	@DisplayName("Test deleteBook ByIsbn endpoint with various scenarios")
+	void deleteBookByIsbn(HttpTestCase testCase) throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
 		
-		when(bookService.deleteBookByIsbn(book.getIsbn())).thenReturn(ServiceResponse.createOk(""));
+		BookControllerServiceExpectations.configureDeleteByIsbnServiceExpectations(testCase, book.getIsbn(), bookService);
 		
-		performDeleteByIsbn(book).andExpect(status().isOk());
+		MvcResult mvcResult = performDeleteByIsbn(book).andReturn();
+		
+		Assertions.assertThat(mvcResult.getResponse().getStatus()).isEqualTo(testCase.expectedStatus.value());
 		
 		verify(bookService, times(1)).deleteBookByIsbn(book.getIsbn());
 	}
 	
-	@Test
-	void deleteBookByIsbnNotFound() throws Exception
-	{
-		Book book = BookHelper.getRandomBook();
-		
-		when(bookService.deleteBookByIsbn(book.getIsbn())).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
-		
-		performDeleteByIsbn(book).andExpect(status().isNotFound());
-		
-		verify(bookService, times(1)).deleteBookByIsbn(book.getIsbn());
-	}
-	
-	@Test
-	void updateBook() throws Exception
+	@ParameterizedTest
+	@MethodSource("net.myself.DemoLibrary.Helper.HttpTestCase#updateBook")
+	@DisplayName("Test updateBook endpoint with various scenarios")
+	void updateBook(HttpTestCase testCase) throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
 		AuthorNto author = getAuthor();
@@ -190,34 +197,39 @@ class BookControllerTest
 		
 		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
 		
-		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createOk(newBook));
+		BookControllerServiceExpectations.configureUpdateBookServiceExpectations(testCase, nto, bookService, newBook);
 		
-		MvcResult mvcResult = performUpdate(nto).andExpect(status().isOk()).andReturn();
+		MvcResult mvcResult = performUpdate(nto).andReturn();
 		
-		BookNto updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), BookNto.class);
+		Assertions.assertThat(mvcResult.getResponse().getStatus()).isEqualTo(testCase.expectedStatus.value());
 		
-		Assertions.assertThat(updatedBook.title()).isEqualTo(newBook.title());
-		Assertions.assertThat(updatedBook.authorIsni()).isEqualTo(newBook.authorIsni());
-		Assertions.assertThat(updatedBook.isbn()).isEqualTo(book.getIsbn());
-		Assertions.assertThat(updatedBook.publishedDate()).isEqualTo(newBook.publishedDate());
+		if(testCase.expectedStatus == HttpStatus.OK)
+		{
+			BookNto updatedBook = jackson.readValue(mvcResult.getResponse().getContentAsString(), BookNto.class);
+			
+			Assertions.assertThat(updatedBook.title()).isEqualTo(newBook.title());
+			Assertions.assertThat(updatedBook.authorIsni()).isEqualTo(newBook.authorIsni());
+			Assertions.assertThat(updatedBook.isbn()).isEqualTo(book.getIsbn());
+			Assertions.assertThat(updatedBook.publishedDate()).isEqualTo(newBook.publishedDate());
+		}
 		
 		verify(bookService, times(1)).updateBookFromNto(nto);
 	}
 	
-	@Test
-	void updateBookNotFound() throws Exception
+	@ParameterizedTest
+	@MethodSource("net.myself.DemoLibrary.Helper.HttpTestCase#updateIsbn")
+	@DisplayName("Test updateIsbn endpoint with various scenarios")
+	void updateIsbn(HttpTestCase testCase) throws Exception
 	{
 		Book book = BookHelper.getRandomBook();
-		AuthorNto author = getAuthor();
-		BookNto newBook = new BookNto(book.getTitle()+"ed", book.getIsbn(), author.fullName(), author.isni(), LocalDate.now().minus(3, ChronoUnit.YEARS), author);
 		
-		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
+		String isbn = book.getIsbn();
+		String newIsbn = isbn + "edited";
+		BookControllerServiceExpectations.configureUpdateIsbnServiceExpectations(testCase, isbn, newIsbn, bookService);
 		
-		when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
+		MvcResult mvcResult = performUpdateIsbn(isbn, newIsbn).andReturn();
 		
-		performUpdate(nto).andExpect(status().isNotFound());
-		
-		verify(bookService, times(1)).updateBookFromNto(nto);
+		Assertions.assertThat(mvcResult.getResponse().getStatus()).isEqualTo(testCase.expectedStatus.value());
 	}
 	
 	private static AuthorNto getAuthor()
@@ -233,5 +245,10 @@ class BookControllerTest
 	private ResultActions performUpdate(BookUpdateNto nto) throws Exception
 	{
 		return mockMvc.perform(BookControllerEndPointsMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
+	}
+	
+	private ResultActions performUpdateIsbn(String isbn, String newIsbn) throws Exception
+	{
+		return mockMvc.perform(BookControllerEndPointsMap.updateIsbn(isbn, newIsbn)).andDo(print());
 	}
 }

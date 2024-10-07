@@ -21,7 +21,10 @@ public class BookControllerEndPointsMap
 	public static RequestBuilder deleteBookById(Book book) {return delete(buildPath("{id}"), book.getId()).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);}
 	public static RequestBuilder updateBook(String jsonBook) {return put(buildPath("update")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(jsonBook);}
 	public static RequestBuilder searchByTitle(String title) {return get(buildPath("searchByTitle")).contentType(MediaType.APPLICATION_JSON).param("title", title);}
-	
+	public static RequestBuilder updateIsbn(String isbn, String newIsbn)
+	{
+		return put(buildPath("updateIsbn")).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).param("isbn", isbn).param("newIsbn", newIsbn);
+	}
 	private static String buildPath(String path)
 	{
 		return MessageFormat.format("{0}/{1}", basePath, path);

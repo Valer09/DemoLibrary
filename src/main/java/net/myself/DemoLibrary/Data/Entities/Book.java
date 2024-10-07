@@ -112,6 +112,6 @@ public class Book
 		
 		if  (!(obj instanceof Book)) return false;
 		
-		return id >=0 && id == (((Book) obj).getId());
+		return (id >=0 && id == (((Book) obj).getId()) && isbn.equals(((Book) obj).getIsbn()));
 	}
 }

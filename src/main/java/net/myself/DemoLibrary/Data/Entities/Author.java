@@ -90,4 +90,13 @@ public class Author
 	{
 		return books;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		
+		if  (!(obj instanceof Author)) return false;
+		
+		return (id >=0 && id == (((Author) obj).getId()) && isni.equals((((Author) obj).getIsni())));
+	}
 }

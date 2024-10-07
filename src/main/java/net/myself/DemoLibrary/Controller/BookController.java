@@ -76,7 +76,6 @@ public class BookController
 						{
 							case OK -> new ResponseEntity<>(bookServiceResponse.get(), HttpStatus.OK);
 							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
 							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 						};
 	}
