@@ -3,19 +3,16 @@ package net.myself.DemoLibrary.Helper;
 import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
-import net.myself.DemoLibrary.Service.BookService;
-import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
-import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 
-public class BookServiceRepositoryExpectations
+public class BookService_RepositoryACT
 {
-	public static void configureUpdateIsbnServiceExpectations(ServiceResult serviceResult, long bookId, String isbn, String newIsbn, IBookRepository bookRepositoryMock)
+	public static void configureUpdateIsbnExpectations(ServiceResult serviceResult, long bookId, String isbn, String newIsbn, IBookRepository bookRepositoryMock)
 	{
 		if(serviceResult == ServiceResult.OK)
 		{

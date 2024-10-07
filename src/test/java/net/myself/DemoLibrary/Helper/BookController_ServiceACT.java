@@ -9,9 +9,9 @@ import org.springframework.http.HttpStatus;
 
 import static org.mockito.Mockito.when;
 
-public class BookControllerServiceExpectations
+public class BookController_ServiceACT
 {
-	public static void configureAddBookServiceExpectations(HttpTestCase testCase, BookNto bookNto, BookNto deserialized, BookService bookService)
+	public static void configureAddBookExpectations(HttpTestCase testCase, BookNto bookNto, BookNto deserialized, BookService bookService)
 	{
 		if(testCase.expectedStatus == HttpStatus.CONFLICT)
 			when(bookService.addBookFromNto(deserialized)).thenReturn(ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists"));
@@ -21,7 +21,7 @@ public class BookControllerServiceExpectations
 			when(bookService.addBookFromNto(deserialized)).thenReturn(ServiceResponse.createOk(bookNto));
 	}
 	
-	public static void configureDeleteByIsbnServiceExpectations(HttpTestCase testCase, String isbn, BookService bookService)
+	public static void configureDeleteByIsbnExpectations(HttpTestCase testCase, String isbn, BookService bookService)
 	{
 		if(testCase.expectedStatus == HttpStatus.NOT_FOUND)
 			when(bookService.deleteBookByIsbn(isbn)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
@@ -29,7 +29,7 @@ public class BookControllerServiceExpectations
 			when(bookService.deleteBookByIsbn(isbn)).thenReturn(ServiceResponse.createOk(""));
 	}
 	
-	public static void configureUpdateBookServiceExpectations(HttpTestCase testCase, BookUpdateNto nto, BookService bookService, BookNto newBook)
+	public static void configureUpdateBookExpectations(HttpTestCase testCase, BookUpdateNto nto, BookService bookService, BookNto newBook)
 	{
 		if(testCase.expectedStatus == HttpStatus.NOT_FOUND)
 			when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createError(ServiceResult.NOT_FOUND, ""));
@@ -39,7 +39,7 @@ public class BookControllerServiceExpectations
 			when(bookService.updateBookFromNto(nto)).thenReturn(ServiceResponse.createOk(newBook));
 	}
 	
-	public static void configureUpdateIsbnServiceExpectations(HttpTestCase testCase, String isbn, String newIsbn, BookService bookService)
+	public static void configureUpdateIsbnExpectations(HttpTestCase testCase, String isbn, String newIsbn, BookService bookService)
 	{
 		if(testCase.expectedStatus == HttpStatus.OK)
 			when(bookService.updateIsbn(isbn, newIsbn)).thenReturn(ServiceResponse.createOk(1));

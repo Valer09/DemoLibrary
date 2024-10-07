@@ -11,12 +11,10 @@ import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Helper.BookControllerEndPointsMap;
-import net.myself.DemoLibrary.Helper.BookControllerServiceExpectations;
+import net.myself.DemoLibrary.Helper.BookController_ServiceACT;
 import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Helper.HttpTestCase;
 import net.myself.DemoLibrary.Service.BookService;
-import net.myself.DemoLibrary.Service.ServiceResponse;
-import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -151,7 +149,7 @@ public class BookControllerTest
 		var serialized = jackson.writeValueAsString(book);
 		var deserialized = jackson.readValue(serialized, BookNto.class);
 		
-		BookControllerServiceExpectations.configureAddBookServiceExpectations(testCase, book, deserialized, bookService);
+		BookController_ServiceACT.configureAddBookExpectations(testCase, book, deserialized, bookService);
 		
 		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.addBook(serialized)).andReturn();
 		
@@ -177,7 +175,7 @@ public class BookControllerTest
 	{
 		Book book = BookHelper.getRandomBook();
 		
-		BookControllerServiceExpectations.configureDeleteByIsbnServiceExpectations(testCase, book.getIsbn(), bookService);
+		BookController_ServiceACT.configureDeleteByIsbnExpectations(testCase, book.getIsbn(), bookService);
 		
 		MvcResult mvcResult = performDeleteByIsbn(book).andReturn();
 		
@@ -197,7 +195,7 @@ public class BookControllerTest
 		
 		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
 		
-		BookControllerServiceExpectations.configureUpdateBookServiceExpectations(testCase, nto, bookService, newBook);
+		BookController_ServiceACT.configureUpdateBookExpectations(testCase, nto, bookService, newBook);
 		
 		MvcResult mvcResult = performUpdate(nto).andReturn();
 		
@@ -225,7 +223,7 @@ public class BookControllerTest
 		
 		String isbn = book.getIsbn();
 		String newIsbn = isbn + "edited";
-		BookControllerServiceExpectations.configureUpdateIsbnServiceExpectations(testCase, isbn, newIsbn, bookService);
+		BookController_ServiceACT.configureUpdateIsbnExpectations(testCase, isbn, newIsbn, bookService);
 		
 		MvcResult mvcResult = performUpdateIsbn(isbn, newIsbn).andReturn();
 		

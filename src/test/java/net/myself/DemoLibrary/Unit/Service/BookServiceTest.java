@@ -5,8 +5,7 @@ import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookHelper;
-import net.myself.DemoLibrary.Helper.BookServiceRepositoryExpectations;
-import net.myself.DemoLibrary.Helper.HttpTestCase;
+import net.myself.DemoLibrary.Helper.BookService_RepositoryACT;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.BookService;
@@ -223,7 +222,7 @@ public class BookServiceTest
 		Book book = BookHelper.getRandomBook();
 		String newIsbn = "newIsbn";
 		
-		BookServiceRepositoryExpectations.configureUpdateIsbnServiceExpectations(testCase, book.getId(), book.getIsbn(), newIsbn, bookRepositoryMock);
+		BookService_RepositoryACT.configureUpdateIsbnExpectations(testCase, book.getId(), book.getIsbn(), newIsbn, bookRepositoryMock);
 		
 		var result = bookService.updateIsbn(book.getIsbn(), newIsbn).getResult();
 		

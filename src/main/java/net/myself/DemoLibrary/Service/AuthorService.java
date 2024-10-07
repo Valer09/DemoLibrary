@@ -54,11 +54,11 @@ public class AuthorService
 		if(!authorRepository.existsByIsni(authorUpdateNto.isni())) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
 		var author = authorRepository.findByIsni(authorUpdateNto.isni());
 		
+		if(author.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal server error");
+		
 		author.get().update(new AuthorUpdate(authorUpdateNto.name(), authorUpdateNto.lastName(), authorUpdateNto.birth()));
 		
-		return author.
-						map(value -> ServiceResponse.createOk(AuthorNto.fromAuthor(authorRepository.save(value))))
-						.orElseGet(() -> ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal server error"));
+		return ServiceResponse.createOk(AuthorNto.fromAuthor(authorRepository.save(author.get())));
 		
 	}
 	
