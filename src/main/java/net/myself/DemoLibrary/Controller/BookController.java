@@ -17,7 +17,7 @@ import java.util.List;
 // Input verification
 
 @RestController
-@RequestMapping(value = "/books", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1+json"})
+@RequestMapping(value = "/books", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1.0+json"})
 public class BookController
 {
 	@Autowired

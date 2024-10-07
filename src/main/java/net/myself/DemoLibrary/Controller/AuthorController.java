@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/authors", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1+json"})
+@RequestMapping(value = "/authors", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1.0+json"})
 //NOTE: you might want to use @Qualifier annotation to inherits different versions of a service connected to different version of the api (v1, v2...)
 public class AuthorController
 {
