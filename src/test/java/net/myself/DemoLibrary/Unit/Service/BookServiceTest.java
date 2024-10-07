@@ -5,13 +5,18 @@ import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Helper.BookHelper;
+import net.myself.DemoLibrary.Helper.BookServiceRepositoryExpectations;
+import net.myself.DemoLibrary.Helper.HttpTestCase;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -208,6 +213,25 @@ public class BookServiceTest
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		assertNull(result.get());
 		verify(bookRepositoryMock, never()).save(any());
+	}
+	
+	@ParameterizedTest
+	@MethodSource("net.myself.DemoLibrary.Helper.ServiceResultTestCase#updateIsbn")
+	@DisplayName("Test updateIsbn endpoint with various scenarios")
+	void updateIsbn(ServiceResult testCase) throws Exception
+	{
+		Book book = BookHelper.getRandomBook();
+		String newIsbn = "newIsbn";
+		
+		BookServiceRepositoryExpectations.configureUpdateIsbnServiceExpectations(testCase, book.getId(), book.getIsbn(), newIsbn, bookRepositoryMock);
+		
+		var result = bookService.updateIsbn(book.getIsbn(), newIsbn).getResult();
+		
+		Assertions.assertThat(result).isEqualTo(testCase);
+		if(testCase == ServiceResult.OK || testCase == ServiceResult.SERVER_ERROR)
+			verify(bookRepositoryMock, times(1)).updateIsbnById(book.getId(), newIsbn);
+		else
+			verify(bookRepositoryMock, never()).updateIsbnById(book.getId(), newIsbn);
 	}
 	
 	private static AuthorNto getAuthor()

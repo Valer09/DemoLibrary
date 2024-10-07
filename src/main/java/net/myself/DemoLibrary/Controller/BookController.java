@@ -13,6 +13,7 @@ import java.util.List;
 
 //TODO:
 // Test for new service and repository of author
+// Add API versioning
 
 @RestController
 @RequestMapping(value = "/books", produces = MediaType.APPLICATION_JSON_VALUE)
