@@ -1,7 +1,6 @@
 package net.myself.DemoLibrary.Controller;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
-import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Service.AuthorService;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/authors", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/authors", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1+json"})
 public class AuthorController
 {
 	@Autowired
