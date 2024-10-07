@@ -1,7 +1,11 @@
 package net.myself.DemoLibrary.Data.Repository;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +24,9 @@ public interface IBookRepository extends JpaRepository<Book, Long>
 	boolean existsByIsbn(String isbn);
 	
 	void deleteByIsbn(String isbn);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE Book b SET b.isbn = :newIsbn WHERE b.id = :bookId")
+	int updateIsbnById(long bookId, String newIsbn);
 }

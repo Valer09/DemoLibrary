@@ -112,5 +112,17 @@ public class BookService
 		_logger.trace("deleted object book with id "+id);
 		return ServiceResponse.createOk("Book deleted successfully");
 	}
+	
+	public ServiceResponse<Integer> updateIsbn(String isbn, String newIsbn)
+	{
+		if(!bookRepository.existsByIsbn(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
+		if(bookRepository.existsByIsbn(newIsbn)) return ServiceResponse.createError(ServiceResult.CONFLICT, "Isbn already existing");
+		var book = bookRepository.findByIsbn(isbn);
+		
+		var result = bookRepository.updateIsbnById(book.get().getId(), newIsbn);
+		if(result != 1) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal Server Error");
+		
+		return ServiceResponse.createOk(result);
+	}
 }
 

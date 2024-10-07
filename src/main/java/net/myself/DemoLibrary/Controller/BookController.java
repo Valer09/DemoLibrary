@@ -11,8 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO: REDESIGN NTOs. Edit author isni with isni. Make booNto to have only authorName and identifier not all the object.
-// Move isbn modification to specific http request
+//TODO:
 // Implements Book->Author association modification
 // Test for new service and repository of author
 
@@ -74,6 +73,19 @@ public class BookController
 	public ResponseEntity<BookNto> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
 	{
 		ServiceResponse<BookNto> bookServiceResponse = bookService.updateBookFromNto(bookUpdateNto);
+		return switch(bookServiceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(bookServiceResponse.get(), HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
+							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+						};
+	}
+	
+	@PutMapping("/updateIsbn")
+	public ResponseEntity<Integer> updateIsbn(@RequestParam String isbn, @RequestParam String newIsbn)
+	{
+		ServiceResponse<Integer> bookServiceResponse = bookService.updateIsbn(isbn, newIsbn);
 		return switch(bookServiceResponse.getResult())
 						{
 							case OK -> new ResponseEntity<>(bookServiceResponse.get(), HttpStatus.OK);
