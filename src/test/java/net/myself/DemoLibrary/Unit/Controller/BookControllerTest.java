@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.myself.DemoLibrary.BookControllerTestConfig;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,8 +39,11 @@ import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(BookController.class)
+@Import(BookControllerTestConfig.class)
 public class BookControllerTest
 {
+	@Autowired
+	BookControllerEndPointsMap bookControllerEndPointsMap;
 	@Autowired
 	private ObjectMapper jackson;
 	@Autowired
@@ -58,7 +63,7 @@ public class BookControllerTest
 		
 		when(bookService.getAllBooksNto()).thenReturn(bookList.stream().map(BookNto::fromBook).collect(Collectors.toList()));
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.getAllBooks())
+		MvcResult mvcResult = mockMvc.perform(bookControllerEndPointsMap.getAllBooks())
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(4)))
 						.andReturn();
@@ -84,7 +89,7 @@ public class BookControllerTest
 		AuthorNto aut = getAuthor();
 		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(), aut)));
 		
-		mockMvc.perform(BookControllerEndPointsMap.findByIbsn(isbn))
+		mockMvc.perform(bookControllerEndPointsMap.findByIbsn(isbn))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
 		
@@ -106,7 +111,7 @@ public class BookControllerTest
 		
 		when(bookService.findByTitleNto(title)).thenReturn(books);
 		
-		mockMvc.perform(BookControllerEndPointsMap.findByTitle(title))
+		mockMvc.perform(bookControllerEndPointsMap.findByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(2)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
@@ -131,7 +136,7 @@ public class BookControllerTest
 		
 		when(bookService.findByTitleContainingIgnoreCaseNto(title)).thenReturn(books);
 		
-		mockMvc.perform(BookControllerEndPointsMap.searchByTitle(title))
+		mockMvc.perform(bookControllerEndPointsMap.searchByTitle(title))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
 						.andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value(title))
@@ -151,7 +156,7 @@ public class BookControllerTest
 		
 		BookController_ServiceACT.configureAddBookExpectations(testCase, book, deserialized, bookService);
 		
-		MvcResult mvcResult = mockMvc.perform(BookControllerEndPointsMap.addBook(serialized)).andReturn();
+		MvcResult mvcResult = mockMvc.perform(bookControllerEndPointsMap.addBook(serialized)).andReturn();
 		
 		Assertions.assertThat(mvcResult.getResponse().getStatus()).isEqualTo(testCase.expectedStatus.value());
 		
@@ -237,16 +242,16 @@ public class BookControllerTest
 	
 	private ResultActions performDeleteByIsbn(Book book) throws Exception
 	{
-		return mockMvc.perform(BookControllerEndPointsMap.deleteBookByIsbn(book)).andDo(print());
+		return mockMvc.perform(bookControllerEndPointsMap.deleteBookByIsbn(book)).andDo(print());
 	}
 	
 	private ResultActions performUpdate(BookUpdateNto nto) throws Exception
 	{
-		return mockMvc.perform(BookControllerEndPointsMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
+		return mockMvc.perform(bookControllerEndPointsMap.updateBook(jackson.writeValueAsString(nto))).andDo(print());
 	}
 	
 	private ResultActions performUpdateIsbn(String isbn, String newIsbn) throws Exception
 	{
-		return mockMvc.perform(BookControllerEndPointsMap.updateIsbn(isbn, newIsbn)).andDo(print());
+		return mockMvc.perform(bookControllerEndPointsMap.updateIsbn(isbn, newIsbn)).andDo(print());
 	}
 }
