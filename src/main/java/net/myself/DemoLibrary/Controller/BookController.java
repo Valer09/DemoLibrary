@@ -6,23 +6,20 @@ import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-//TODO:
+// TODO:
 // Test for AuthorController with Cucumber
 // Add API versioning
 // Input verification
-
 @RestController
-@RequestMapping(value = "/books", produces = {MediaType.APPLICATION_JSON_VALUE, "application/vnd.DemoLibrary.api.v1.0+json"})
+@RequestMapping(value = "/books", produces = {"application/vnd.DemoLibrary.api.v1.0+json"})
 public class BookController
 {
 	@Autowired
 	BookService bookService;
-	
 	@GetMapping
 	public ResponseEntity<List<BookNto>> getAllBooks()
 	{

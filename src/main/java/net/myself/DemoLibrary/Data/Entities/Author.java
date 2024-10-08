@@ -2,7 +2,6 @@ package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Model.AuthorUpdate;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,7 +23,6 @@ public class Author
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 	private List<Book> books;
 	
-	@PersistenceConstructor
 	public Author(){}
 	
 	public Author(String isni, String name, String lastname, LocalDate birth, List<Book> books)
