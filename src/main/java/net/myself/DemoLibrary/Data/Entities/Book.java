@@ -2,7 +2,6 @@ package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 import java.time.LocalDate;
 
@@ -20,7 +19,6 @@ public class Book
 	@JoinColumn(name = "author_id")
 	private Author author;
 	
-	@PersistenceConstructor
 	public Book(){}
 	public Book(long id, String title, Author author, String isbn, LocalDate publishedDate)
 	{
