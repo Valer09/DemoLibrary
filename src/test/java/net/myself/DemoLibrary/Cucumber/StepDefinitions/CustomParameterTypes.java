@@ -5,7 +5,7 @@ import io.cucumber.java.ParameterType;
 public class CustomParameterTypes
 {
 	@ParameterType(".*")
-	public String stringParam(String value) {
+	public String  stringParam(String value) {
 		return value;
 	}
 }

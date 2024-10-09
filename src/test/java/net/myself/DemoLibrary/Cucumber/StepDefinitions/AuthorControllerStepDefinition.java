@@ -11,6 +11,7 @@ import net.myself.DemoLibrary.Cucumber.Configuration.CucumberSpringConfiguration
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Helper.AuthorControllerEndPointsMap;
 import net.myself.DemoLibrary.Service.AuthorService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,7 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 		this.authorNto = authorNto;
 	}
 	
-	@Given("the author service is set to simulate {stringParam}")
+	@Given("the author service is set to simulate {stringParam} on add author")
 	public void theAuthorServiceIsSetToSimulate (String serviceOutcome) throws Exception
 	{
 		var serialized = jackson.writeValueAsString(authorNto);
@@ -69,11 +70,24 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 		testContextCache.setProperty("transientAuthorNto", transientAuthorNto);
 	}
 	
+	@Given("the author service is set to simulate {stringParam} on find by isni")
+	public void theAuthorServiceIsSetToSimulateOnFindByIsni (String serviceOutcome) throws Exception
+	{
+		var serviceResult = EntityTransformer.getServiceResponse(serviceOutcome, authorNto, "");
+		when(authorService.findAuthorByIsniNto(authorNto.isni())).thenReturn(serviceResult);
+	}
+	
 	@When("the client makes a request to add the author providing the nto")
 	public void theClientMakeARequestToAddTheAuthorProvidingAnAuthorNto() throws Exception
 	{
 		String serialized = (String)(testContextCache.getProperty("serialized_author"));
 		resultAction = mockMvc.perform(authorControllerEndPointsMap.addBook(serialized));
+	}
+	
+	@When("the client makes a request find the author by isni {stringParam}")
+	public void theClientMakesARequestFindTheAuthorByIsni(String isni) throws Exception
+	{
+		resultAction = mockMvc.perform(authorControllerEndPointsMap.finByIsni(isni));
 	}
 	
 	@Then("the api responses is {int}")
@@ -87,5 +101,26 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	{
 		var transientAuthorNto = (AuthorNto)testContextCache.getProperty("transientAuthorNto");
 		Mockito.verify(authorService, times(1)).addAuthorNto(transientAuthorNto);
+	}
+	
+	@Then("the service find by isni operation has been called")
+	public void theServiceFindByIsniOperationHasBeenCalled()
+	{
+		Mockito.verify(authorService, times(1)).findAuthorByIsniNto(authorNto.isni());
+	}
+	
+	@Then("the response contains the author with the isni {stringParam}")
+	public void theResponseContainsTheAuthorWithTheIsni(String isni) throws Exception
+	{
+		if(isni.equals("empty")) Assertions.assertTrue(resultAction.andReturn().getResponse().getContentAsString().isEmpty());
+		else
+		{
+			var resultAuthor = jackson.readValue(resultAction.andReturn().getResponse().getContentAsString(), AuthorNto.class);
+			Assertions.assertEquals(resultAuthor.isni(), isni);
+			Assertions.assertEquals(resultAuthor.name(), authorNto.name());
+			Assertions.assertEquals(resultAuthor.lastName(), authorNto.lastName());
+			Assertions.assertEquals(resultAuthor.birth(), authorNto.birth());
+			Assertions.assertEquals(resultAuthor.isni(), authorNto.isni());
+		}
 	}
 }
