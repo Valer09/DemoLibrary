@@ -1,6 +1,7 @@
 package net.myself.DemoLibrary.Cucumber.StepDefinitions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -9,9 +10,7 @@ import net.myself.DemoLibrary.BookControllerTestConfig;
 import net.myself.DemoLibrary.Cucumber.Configuration.CucumberSpringConfiguration;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Helper.AuthorControllerEndPointsMap;
-import net.myself.DemoLibrary.Helper.BookHelper;
 import net.myself.DemoLibrary.Service.AuthorService;
-import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,36 +40,52 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	private ObjectMapper jackson;
 	@Autowired
 	private MockMvc mockMvc;
+	@Autowired
+	TestContextCache testContextCache;
 	private AuthorNto authorNto;
-	private AuthorNto transientAuthorNto;
 	ResultActions resultAction;
 	
-	@Given("an author NTO")
-	public void anAuthorNto()
+	@Before
+	public void initialize()
 	{
-		authorNto = AuthorNto.fromAuthor(BookHelper.getRandomAuthor());
+		testContextCache.reset();
 	}
 	
-	@When("the client makes a request to add an author providing an author NTO")
-	public void theClientMakeARequestToAddAnAuthorProvidingAnAuthorNto() throws Exception
+	@Given("the following Author nto:")
+	public void anAuthorNto(AuthorNto authorNto)
+	{
+		this.authorNto = authorNto;
+	}
+	
+	@Given("the author service is set to simulate {stringParam}")
+	public void theAuthorServiceIsSetToSimulate (String serviceOutcome) throws Exception
 	{
 		var serialized = jackson.writeValueAsString(authorNto);
-		transientAuthorNto = jackson.readValue(serialized, AuthorNto.class);
+		var transientAuthorNto = jackson.readValue(serialized, AuthorNto.class);
+		var serviceResult = EntityTransformer.getServiceResponse(serviceOutcome, authorNto, "");
+		when(authorService.addAuthorNto(transientAuthorNto)).thenReturn(serviceResult);
 		
-		when(authorService.addAuthorNto(transientAuthorNto)).thenReturn(ServiceResponse.createOk(authorNto));
-		
+		testContextCache.setProperty("serialized_author", serialized);
+		testContextCache.setProperty("transientAuthorNto", transientAuthorNto);
+	}
+	
+	@When("the client makes a request to add the author providing the nto")
+	public void theClientMakeARequestToAddTheAuthorProvidingAnAuthorNto() throws Exception
+	{
+		String serialized = (String)(testContextCache.getProperty("serialized_author"));
 		resultAction = mockMvc.perform(authorControllerEndPointsMap.addBook(serialized));
 	}
 	
-	@Then("the api responses ok")
-	public void theApiResponsesOk() throws Exception
+	@Then("the api responses is {int}")
+	public void theApiResponsesOk(int apiResponse) throws Exception
 	{
-		resultAction.andExpect(status().isCreated());
+		resultAction.andExpect(status().is(apiResponse));
 	}
 	
 	@Then("the service add operation has been called")
 	public void theServiceAddOperationHasBeenCalled()
 	{
+		var transientAuthorNto = (AuthorNto)testContextCache.getProperty("transientAuthorNto");
 		Mockito.verify(authorService, times(1)).addAuthorNto(transientAuthorNto);
 	}
 }
