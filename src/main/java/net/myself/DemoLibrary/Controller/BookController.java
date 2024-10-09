@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // TODO:
-// Test for AuthorController with Cucumber
-// Add API versioning
+// Fix the error
 // Input verification
 @RestController
 @RequestMapping(value = "/books", produces = {"application/vnd.DemoLibrary.api.v1.0+json"})
