@@ -111,7 +111,18 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<profiles>
-						<profile>debug</profile>
+						<id>debug</id>
+						<properties>
+							<spring-boot.run.profiles>debug</spring-boot.run.profiles>
+						</properties>
+						<id>dev</id>
+						<properties>
+							<spring-boot.run.profiles>dev</spring-boot.run.profiles>
+						</properties>
+						<id>staging</id>
+						<properties>
+							<spring-boot.run.profiles>staging</spring-boot.run.profiles>
+						</properties>
 					</profiles>
 				</configuration>
 			</plugin>
