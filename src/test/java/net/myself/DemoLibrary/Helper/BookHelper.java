@@ -19,13 +19,13 @@ public class BookHelper
 	public static Book getRandomBook()
 	{
 		Faker faker = new Faker();
-		return new Book(1, faker.book().title(), getAuthor(), faker.code().isbn10(), getDate(faker, 1));
+		return new Book(1, faker.book().title(), getAuthor(), faker.code().isbn13(), getDate(faker, 1));
 	}
 	
 	public static Book getRandomBookWithId()
 	{
 		Faker faker = new Faker();
-		return new Book(new Random().nextInt(100), faker.book().title(), getAuthor(), faker.code().isbn10(), getDate(faker, 1));
+		return new Book(new Random().nextInt(100), faker.book().title(), getAuthor(), faker.code().isbn13(), getDate(faker, 1));
 	}
 	
 	public static Author getRandomAuthor()
@@ -36,13 +36,13 @@ public class BookHelper
 		LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
 		
 		Faker faker = new Faker();
-    return new Author(faker.idNumber().ssnValid(), faker.name().firstName(), faker.name().lastName(), randomDate, new ArrayList<>(Arrays.asList(getRandomBook(), getRandomBook(), getRandomBook())));
+    return new Author(faker.number().digits(16), faker.name().firstName(), faker.name().lastName(), randomDate, new ArrayList<>(Arrays.asList(getRandomBook(), getRandomBook(), getRandomBook())));
 	}
 	
 	private static Author getAuthor()
 	{
 		Faker faker = new Faker();
-		return new Author(faker.idNumber().ssnValid(), faker.name().firstName(), faker.name().lastName(), getDate(faker, 1), new ArrayList<>());
+		return new Author(faker.number().digits(16), faker.name().firstName(), faker.name().lastName(), getDate(faker, 1), new ArrayList<>());
 	}
 	
 	private static LocalDate getDate(Faker faker, int atMost)

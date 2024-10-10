@@ -1,4 +1,6 @@
 package net.myself.DemoLibrary.Controller;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
 import net.myself.DemoLibrary.Service.AuthorService;
@@ -18,7 +20,7 @@ public class AuthorController
 	@Autowired
 	private AuthorService authorService;
 	@PostMapping
-	public ResponseEntity<AuthorNto> addAuthor(@RequestBody AuthorNto authorNto)
+	public ResponseEntity<AuthorNto> addAuthor(@RequestBody @Valid AuthorNto authorNto)
 	{
 		var saved = authorService.addAuthorNto(authorNto);
 		return switch(saved.getResult())
@@ -36,7 +38,7 @@ public class AuthorController
 	}
 	
 	@GetMapping("/findByIsni")
-	public ResponseEntity<AuthorNto> findAuthorByIsni(@RequestParam("isni") String isni)
+	public ResponseEntity<AuthorNto> findAuthorByIsni(@RequestParam("isni") @Size(min = 16, max = 16) String isni)
 	{
 		var saved = authorService.findAuthorByIsniNto(isni);
 		return switch(saved.getResult())
@@ -48,26 +50,27 @@ public class AuthorController
 	}
 	
 	@GetMapping("/searchByName")
-	public List<AuthorNto> searchByName(@RequestParam("name") String name)
+	public List<AuthorNto> searchByName(@RequestParam("name") @Size(min = 1, max = 20) String name)
 	{
 		return authorService.findByNameContainingIgnoreCaseNto(name);
 	}
 	
 	@PutMapping("/update")
-	public ResponseEntity<AuthorNto> updateAuthor(@RequestBody AuthorUpdateNto authorUpdateNto)
+	public ResponseEntity<AuthorNto> updateAuthor(@RequestBody @Valid AuthorUpdateNto authorUpdateNto)
 	{
 		ServiceResponse<AuthorNto> authorServiceResponse = authorService.updateAuthorFromNto(authorUpdateNto);
 		return switch(authorServiceResponse.getResult())
 						{
 							case OK -> new ResponseEntity<>(authorServiceResponse.get(), HttpStatus.OK);
 							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
 							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 						};
 	}
 	
 	@PutMapping("/updateIsni")
-	public ResponseEntity<Integer> updateIsni(@RequestParam("isni") String isni, @RequestParam("newIsni") String newIsni)
+	public ResponseEntity<Integer> updateIsni(
+					@RequestParam("isni") @Size(min = 16, max = 16) String isni,
+					@RequestParam("newIsni") @Size(min = 16, max = 16)  String newIsni)
 	{
 		ServiceResponse<Integer> authorServiceResponse = authorService.updateIsni(isni, newIsni);
 		return switch(authorServiceResponse.getResult())

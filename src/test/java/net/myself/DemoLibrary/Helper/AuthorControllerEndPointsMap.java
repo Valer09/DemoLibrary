@@ -23,6 +23,10 @@ public class AuthorControllerEndPointsMap
 	{
 		return put(buildPath("updateIsni")).contentType(MediaType.APPLICATION_JSON).accept(getAcceptString()).param("isni", isni).param("newIsni", newIsni);
 	}
+	public RequestBuilder updateAuthor(String jsonAuthorUpdateNto)
+	{
+		return put(buildPath("update")).contentType(MediaType.APPLICATION_JSON).accept(getAcceptString()).content(jsonAuthorUpdateNto);
+	}
 	private String buildPath(String path)
 	{
 		return MessageFormat.format("{0}/{1}", basePath, path);

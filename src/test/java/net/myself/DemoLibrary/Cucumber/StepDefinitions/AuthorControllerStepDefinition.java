@@ -9,8 +9,11 @@ import io.cucumber.java.en.When;
 import io.cucumber.spring.CucumberContextConfiguration;
 import net.myself.DemoLibrary.BookControllerTestConfig;
 import net.myself.DemoLibrary.Cucumber.Configuration.CucumberSpringConfiguration;
+import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
+import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
 import net.myself.DemoLibrary.Helper.AuthorControllerEndPointsMap;
+import net.myself.DemoLibrary.Model.AuthorUpdate;
 import net.myself.DemoLibrary.Service.AuthorService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,7 +76,7 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	}
 	
 	@Given("the author service is set to simulate {stringParam} on update isni with {stringParam}")
-	public void theAuthorServiceIsSetToSimulateOnUpdateIsni (String serviceOutcome, String newIsni) throws Exception
+	public void theAuthorServiceIsSetToSimulateOnUpdateIsni (String serviceOutcome, String newIsni)
 	{
 		
 		var serviceResult = EntityTransformer.getServiceResponse(serviceOutcome, 1, "");
@@ -83,24 +86,38 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	}
 	
 	@Given("the author service is set to simulate {stringParam} on find by isni")
-	public void theAuthorServiceIsSetToSimulateOnFindByIsni (String serviceOutcome) throws Exception
+	public void theAuthorServiceIsSetToSimulateOnFindByIsni (String serviceOutcome)
 	{
 		var serviceResult = EntityTransformer.getServiceResponse(serviceOutcome, authorNto, "");
 		when(authorService.findAuthorByIsniNto(authorNto.isni())).thenReturn(serviceResult);
 	}
 	
 	@Given("the following list of authors in the system:")
-	public void theFollowingListOfAuthorsInTheSystem (List<AuthorNto> authorList) throws Exception
+	public void theFollowingListOfAuthorsInTheSystem (List<AuthorNto> authorList)
 	{
 		testContextCache.setProperty("authorList", authorList);
 	}
 	
 	@Given("the author service is set to simulate {stringParam} on find by name")
-	public void theAuthorServiceIsSetToSimulateOnFindByName (String serviceOutcome) throws Exception
+	public void theAuthorServiceIsSetToSimulateOnFindByName (String serviceOutcome)
 	{
 		var serviceResponse = EntityTransformer.getServiceResponse(serviceOutcome, testContextCache.getProperty("authorList"), "");
 		
 		when(authorService.findByNameContainingIgnoreCaseNto(any())).thenReturn((List<AuthorNto>) serviceResponse.get());
+	}
+	
+	@Given("the author service is set to simulate {stringParam} on update author with this nto:")
+	public void theAuthorServiceIsSetToSimulateOnUpdateAuthorWithThisNto (String serviceOutcome, AuthorUpdateNto authorNto)
+	{
+		
+		testContextCache.setProperty("authorUpdateNto", authorNto);
+		Author transientAuthor = Author.createTransientAuthor(this.authorNto);
+		transientAuthor.update(new AuthorUpdate(authorNto.name(), authorNto.lastName(), authorNto.birth()));
+		AuthorNto resultNto = AuthorNto.fromAuthor(transientAuthor);
+		
+		var serviceResponse = EntityTransformer.getServiceResponse(serviceOutcome, resultNto, "");
+		testContextCache.setProperty("updateServiceResponse", serviceResponse);
+		when(authorService.updateAuthorFromNto(authorNto)).thenReturn(serviceResponse);
 	}
 	
 	@When("the client makes a request to add the author providing the nto")
@@ -127,6 +144,14 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	public void theClientMakesARequestUpdateIsniWith(String newIsni) throws Exception
 	{
 		resultAction = mockMvc.perform(authorControllerEndPointsMap.updateIsni(authorNto.isni(), newIsni));
+	}
+	
+	@When("the client makes a request to update the author providing the nto")
+	public void theClientMakesARequestToUpdateTheAuthorProvidingTheNto() throws Exception
+	{
+		AuthorUpdateNto authorUpdateNto = (AuthorUpdateNto)testContextCache.getProperty("authorUpdateNto");
+		
+		resultAction = mockMvc.perform(authorControllerEndPointsMap.updateAuthor(jackson.writeValueAsString(authorUpdateNto)));
 	}
 	
 	@Then("the api responses is {int}")
@@ -169,6 +194,22 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 		}
 	}
 	
+	@Then("the response contains the updated author with the isni {stringParam}")
+	public void theResponseContainsTheUpdatedAuthorWithTheIsni(String isni) throws Exception
+	{
+		AuthorUpdateNto updated = (AuthorUpdateNto) testContextCache.getProperty("authorUpdateNto");
+		if(isni.equals("empty")) Assertions.assertTrue(resultAction.andReturn().getResponse().getContentAsString().isEmpty());
+		else
+		{
+			var resultAuthor = jackson.readValue(resultAction.andReturn().getResponse().getContentAsString(), AuthorNto.class);
+			Assertions.assertEquals(resultAuthor.isni(), isni);
+			Assertions.assertEquals(resultAuthor.name(), updated.name());
+			Assertions.assertEquals(resultAuthor.lastName(), updated.lastName());
+			Assertions.assertEquals(resultAuthor.birth(), updated.birth());
+			Assertions.assertEquals(resultAuthor.isni(), updated.isni());
+		}
+	}
+	
 	@Then("the response contains the list of authors")
 	public void theResponseContainsTheListOfAuthors () throws Exception
 	{
@@ -189,9 +230,16 @@ public class AuthorControllerStepDefinition extends CucumberSpringConfiguration
 	}
 	
 	@Then("the service update isni operation has been called")
-	public void theServiceUpdateIsniOperationHasBeenCalled () throws Exception
+	public void theServiceUpdateIsniOperationHasBeenCalled ()
 	{
 		verify(authorService, times(1)).updateIsni(authorNto.isni(), (String)testContextCache.getProperty("newIsni"));
+	}
+	
+	@Then("the service update operation has been called")
+	public void theServiceUpdateUpdateOperationHasBeenCalled ()
+	{
+		AuthorUpdateNto authorUpdateNto = (AuthorUpdateNto)testContextCache.getProperty("authorUpdateNto");
+		verify(authorService, times(1)).updateAuthorFromNto(authorUpdateNto);
 	}
 	
 	@Then("the response contains the value {int}")

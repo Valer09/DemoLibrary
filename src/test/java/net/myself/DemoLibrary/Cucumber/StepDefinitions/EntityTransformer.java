@@ -2,6 +2,7 @@ package net.myself.DemoLibrary.Cucumber.StepDefinitions;
 
 import io.cucumber.java.DataTableType;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
+import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
 import net.myself.DemoLibrary.Service.ServiceResponse;
 import net.myself.DemoLibrary.Service.ServiceResult;
 
@@ -26,4 +27,15 @@ public class EntityTransformer
 		
 		return new AuthorNto(row.get("Isni"), name, lastName, name+ " " +lastName, LocalDate.parse(row.get("Birth"), DateTimeFormatter.ofPattern("mm/DD/yyyy")));
 	}
+	
+	@DataTableType
+	public AuthorUpdateNto authorUpdateNtoEntityTransformer(Map<String, String> row)
+	{
+		
+		String name = row.get("Name");
+		String lastName = row.get("LastName");
+		
+		return new AuthorUpdateNto(row.get("Isni"), name, lastName, LocalDate.parse(row.get("Birth"), DateTimeFormatter.ofPattern("mm/DD/yyyy")));
+	}
+	
 }

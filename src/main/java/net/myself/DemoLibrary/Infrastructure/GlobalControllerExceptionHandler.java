@@ -5,8 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import java.util.*;
 
 @ControllerAdvice
 public class GlobalControllerExceptionHandler
@@ -27,10 +30,33 @@ public class GlobalControllerExceptionHandler
 		return new ResponseEntity<>("Data Integrity Violation", HttpStatus.CONFLICT);
 	}
 	
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<String> handleGeneralException(Exception ex)
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<Object> handleDataIntegrityViolation(MethodArgumentNotValidException ex)
 	{
-		logger.error("Exception", ex.getMessage(), ex);
-		return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+		logger.error("MethodArgumentNotValidException exception", ex.getMessage(), ex);
+		
+		Map<String, String> errors = new HashMap<>();
+		ex.getBindingResult().getFieldErrors()
+						.forEach(error -> {errors.put(error.getField(), error.getDefaultMessage());});
+		
+		return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
 	}
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	public ResponseEntity<Object> handleDataIntegrityViolation(HandlerMethodValidationException ex)
+	{
+		logger.error("HandlerMethodValidationException exception", ex.getMessage(), ex);
+		
+		Map<String, List<String>> errors = new HashMap<>();
+		
+		ex.getAllValidationResults()
+						.forEach(error -> {
+							List<String> messages = new ArrayList<>();
+							error.getResolvableErrors().forEach(mess -> messages.add(mess.getDefaultMessage()));
+							errors.put(error.getMethodParameter().getParameterName(), messages);});
+		
+		return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+	}
+	
+	
+	
 }

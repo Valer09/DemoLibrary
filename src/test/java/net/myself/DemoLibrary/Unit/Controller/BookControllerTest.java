@@ -85,7 +85,7 @@ public class BookControllerTest
 	@DisplayName("Test findByIsbn endpoint")
 	void findByIsbn() throws Exception
 	{
-		String isbn = "abcd";
+		String isbn = "aaaaaaaaaaaaa";
 		AuthorNto aut = getAuthor();
 		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(), aut)));
 		
@@ -227,7 +227,8 @@ public class BookControllerTest
 		Book book = BookHelper.getRandomBook();
 		
 		String isbn = book.getIsbn();
-		String newIsbn = isbn + "edited";
+		String toAdd = "edited";
+		String newIsbn = isbn.substring(0, isbn.length()-toAdd.length())+toAdd ;
 		BookController_ServiceACT.configureUpdateIsbnExpectations(testCase, isbn, newIsbn, bookService);
 		
 		MvcResult mvcResult = performUpdateIsbn(isbn, newIsbn).andReturn();
@@ -237,7 +238,7 @@ public class BookControllerTest
 	
 	private static AuthorNto getAuthor()
 	{
-		return new AuthorNto("A", "test", "test", "test test", LocalDate.now());
+		return new AuthorNto("AAAAAAAAAAAAAAAA", "test", "test", "test test", LocalDate.now());
 	}
 	
 	private ResultActions performDeleteByIsbn(Book book) throws Exception

@@ -1,4 +1,6 @@
 package net.myself.DemoLibrary.Controller;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Service.BookService;
@@ -25,7 +27,7 @@ public class BookController
 	}
 	
 	@PostMapping
-	public ResponseEntity<BookNto> addBook(@RequestBody BookNto book)
+	public ResponseEntity<BookNto> addBook(@RequestBody @Valid  BookNto book)
 	{
 		var saved = bookService.addBookFromNto(book);
 		return switch(saved.getResult())
@@ -37,7 +39,7 @@ public class BookController
 	}
 	
 	@GetMapping("/findByIsbn")
-	public ResponseEntity<BookNto> findByIsbn(@RequestParam("isbn") String isbn)
+	public ResponseEntity<BookNto> findByIsbn(@RequestParam("isbn") @Size(min = 13, max = 13)  String isbn)
 	{
 		return bookService.findByIsbnNto(isbn)
 						.map(book -> new ResponseEntity<>(book, HttpStatus.OK))
@@ -45,19 +47,19 @@ public class BookController
 	}
 	
 	@GetMapping("/findByTitle")
-	public ResponseEntity<List<BookNto>> findByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<BookNto>> findByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleNto(title), HttpStatus.OK);
 	}
 	
 	@GetMapping("/searchByTitle")
-	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") String title)
+	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleContainingIgnoreCaseNto(title), HttpStatus.OK);
 	}
 	
 	@DeleteMapping("/isbn/{isbn}")
-	public ResponseEntity<String> deleteBookByIsbn(@PathVariable String isbn)
+	public ResponseEntity<String> deleteBookByIsbn(@PathVariable @Size(min = 13, max = 13) String isbn)
 	{
 		if (bookService.deleteBookByIsbn(isbn).getResult().equals(ServiceResult.NOT_FOUND))
 			return new ResponseEntity<>("Book not found", HttpStatus.NOT_FOUND);
@@ -66,7 +68,7 @@ public class BookController
 	}
 
 	@PutMapping("/update")
-	public ResponseEntity<BookNto> updateBook(@RequestBody BookUpdateNto bookUpdateNto)
+	public ResponseEntity<BookNto> updateBook(@RequestBody @Valid  BookUpdateNto bookUpdateNto)
 	{
 		ServiceResponse<BookNto> bookServiceResponse = bookService.updateBookFromNto(bookUpdateNto);
 		return switch(bookServiceResponse.getResult())
@@ -78,7 +80,9 @@ public class BookController
 	}
 	
 	@PutMapping("/updateIsbn")
-	public ResponseEntity<Integer> updateIsbn(@RequestParam String isbn, @RequestParam String newIsbn)
+	public ResponseEntity<Integer> updateIsbn(
+					@RequestParam @Size(min = 13, max = 13) String isbn,
+					@RequestParam @Size(min = 13, max = 13) String newIsbn)
 	{
 		ServiceResponse<Integer> bookServiceResponse = bookService.updateIsbn(isbn, newIsbn);
 		return switch(bookServiceResponse.getResult())

@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = TestController.class)
@@ -34,12 +33,5 @@ public class GlobalControllerExceptionHandlerTest
 	{
 		var response = mockMvc.perform(get("/test/data-integrity-violation")).andExpect(status().isConflict()).andReturn();
 		Assertions.assertThat(response.getResponse().getContentAsString()).isEqualTo("Data Integrity Violation");
-	}
-	
-	@Test
-	void handleGeneralExceptionTest() throws Exception
-	{
-		var response = mockMvc.perform(get("/test/general-exception")).andExpect(status().isInternalServerError()).andReturn();
-		Assertions.assertThat(response.getResponse().getContentAsString()).isEqualTo("Internal Server Error");
 	}
 }
