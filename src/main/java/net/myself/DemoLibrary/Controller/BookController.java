@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // TODO:
-// Fix the error
 // Input verification
 @RestController
 @RequestMapping(value = "/books", produces = {"application/vnd.DemoLibrary.api.v1.0+json"})
