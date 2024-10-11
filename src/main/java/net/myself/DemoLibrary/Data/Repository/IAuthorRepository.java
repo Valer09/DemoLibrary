@@ -1,4 +1,6 @@
 package net.myself.DemoLibrary.Data.Repository;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.Entities.Author;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,23 +14,13 @@ import java.util.Optional;
 @Repository
 public interface IAuthorRepository extends JpaRepository<Author, Long>
 {
-	/*List<Book> findByTitle(String title);
+	boolean existsByIsni(@Size(min = 16, max = 16) String isni);
 	
-	List<Book> findByTitleContainingIgnoreCase(String title);
-	
-	List<Book> findByTitleAndIsbn(String title, String isbn);
-	
-	Optional<Book> findByIsbn(String isbn);
-	
-	void deleteByIsbn(String isbn);*/
-	
-	boolean existsByIsni(String isni);
-	
-	Optional<Author> findByIsni(String isni);
+	Optional<Author> findByIsni(@Size(min = 16, max = 16) String isni);
 	
 	@Transactional
 	@Modifying
 	@Query("UPDATE Author a SET a.isni = :newIsni WHERE a.id = :authorId")
-	int updateIsniById(Long authorId, String newIsni);
-	List<Author> findByNameContainingIgnoreCaseOrLastnameContainingIgnoreCase(String name, String lastname);
+	int updateIsniById(@Positive Long authorId, @Size(min = 16, max = 16) String newIsni);
+	List<Author> findByNameContainingIgnoreCaseOrLastnameContainingIgnoreCase(@Size(min = 1, max = 40) String name, @Size(min = 1, max = 40) String lastname);
 }

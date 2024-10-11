@@ -31,7 +31,7 @@ public class GlobalControllerExceptionHandler
 	}
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<Object> handleDataIntegrityViolation(MethodArgumentNotValidException ex)
+	public ResponseEntity<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex)
 	{
 		logger.error("MethodArgumentNotValidException exception", ex.getMessage(), ex);
 		
@@ -42,7 +42,7 @@ public class GlobalControllerExceptionHandler
 		return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
 	}
 	@ExceptionHandler(HandlerMethodValidationException.class)
-	public ResponseEntity<Object> handleDataIntegrityViolation(HandlerMethodValidationException ex)
+	public ResponseEntity<Object> handleHandlerMethodValidationException(HandlerMethodValidationException ex)
 	{
 		logger.error("HandlerMethodValidationException exception", ex.getMessage(), ex);
 		
