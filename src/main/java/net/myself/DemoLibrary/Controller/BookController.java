@@ -9,6 +9,7 @@ import net.myself.DemoLibrary.Service.ServiceResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,12 +21,15 @@ public class BookController
 {
 	@Autowired
 	BookService bookService;
+	
+	@PreAuthorize("hasAuthority('SCOPE_readbook')")
 	@GetMapping
 	public ResponseEntity<List<BookNto>> getAllBooks()
 	{
 		return new ResponseEntity<>(bookService.getAllBooksNto(), HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
 	@PostMapping
 	public ResponseEntity<BookNto> addBook(@RequestBody @Valid  BookNto book)
 	{
@@ -38,6 +42,7 @@ public class BookController
 						};
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readbook')")
 	@GetMapping("/findByIsbn")
 	public ResponseEntity<BookNto> findByIsbn(@RequestParam("isbn") @Size(min = 13, max = 13)  String isbn)
 	{
@@ -46,18 +51,21 @@ public class BookController
 						.orElse(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readbook')")
 	@GetMapping("/findByTitle")
 	public ResponseEntity<List<BookNto>> findByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleNto(title), HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readbook')")
 	@GetMapping("/searchByTitle")
 	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleContainingIgnoreCaseNto(title), HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
 	@DeleteMapping("/isbn/{isbn}")
 	public ResponseEntity<String> deleteBookByIsbn(@PathVariable @Size(min = 13, max = 13) String isbn)
 	{
@@ -66,7 +74,8 @@ public class BookController
 		
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
-
+	
+	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
 	@PutMapping("/update")
 	public ResponseEntity<BookNto> updateBook(@RequestBody @Valid  BookUpdateNto bookUpdateNto)
 	{
@@ -79,6 +88,7 @@ public class BookController
 						};
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
 	@PutMapping("/updateIsbn")
 	public ResponseEntity<Integer> updateIsbn(
 					@RequestParam @Size(min = 13, max = 13) String isbn,

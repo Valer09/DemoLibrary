@@ -2,6 +2,9 @@ package net.myself.DemoLibrary;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 /*
 * I bean vengono creati e gestiti dal contenitore di oggetti quando sono annotati con le annotazioni appropriate,
@@ -24,8 +27,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 * */
 
 @SpringBootApplication
-public class DemoLibraryApplication {
-
+@EnableMethodSecurity
+public class DemoLibraryApplication
+{
 	public static void main(String[] args) {
 		SpringApplication.run(DemoLibraryApplication.class, args);
 	}

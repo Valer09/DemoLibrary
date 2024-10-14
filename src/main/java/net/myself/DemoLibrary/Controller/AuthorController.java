@@ -8,6 +8,7 @@ import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,8 @@ public class AuthorController
 {
 	@Autowired
 	private AuthorService authorService;
+	
+	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
 	@PostMapping
 	public ResponseEntity<AuthorNto> addAuthor(@RequestBody @Valid AuthorNto authorNto)
 	{
@@ -31,12 +34,14 @@ public class AuthorController
 						};
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
 	@GetMapping
 	public ResponseEntity<List<AuthorNto>> getAllAuthors()
 	{
 		return new ResponseEntity<>(authorService.getAllAuthorsNto(), HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
 	@GetMapping("/findByIsni")
 	public ResponseEntity<AuthorNto> findAuthorByIsni(@RequestParam("isni") @Size(min = 16, max = 16) String isni)
 	{
@@ -49,12 +54,14 @@ public class AuthorController
 						};
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
 	@GetMapping("/searchByName")
 	public List<AuthorNto> searchByName(@RequestParam("name") @Size(min = 1, max = 20) String name)
 	{
 		return authorService.findByNameContainingIgnoreCaseNto(name);
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
 	@PutMapping("/update")
 	public ResponseEntity<AuthorNto> updateAuthor(@RequestBody @Valid AuthorUpdateNto authorUpdateNto)
 	{
@@ -67,6 +74,7 @@ public class AuthorController
 						};
 	}
 	
+	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
 	@PutMapping("/updateIsni")
 	public ResponseEntity<Integer> updateIsni(
 					@RequestParam("isni") @Size(min = 16, max = 16) String isni,
