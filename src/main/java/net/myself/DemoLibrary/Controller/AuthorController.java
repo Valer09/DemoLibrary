@@ -21,7 +21,7 @@ public class AuthorController
 	@Autowired
 	private AuthorService authorService;
 	
-	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
+	@PreAuthorize("hasRole('User')")
 	@PostMapping
 	public ResponseEntity<AuthorNto> addAuthor(@RequestBody @Valid AuthorNto authorNto)
 	{
@@ -34,14 +34,14 @@ public class AuthorController
 						};
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping
 	public ResponseEntity<List<AuthorNto>> getAllAuthors()
 	{
 		return new ResponseEntity<>(authorService.getAllAuthorsNto(), HttpStatus.OK);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/findByIsni")
 	public ResponseEntity<AuthorNto> findAuthorByIsni(@RequestParam("isni") @Size(min = 16, max = 16) String isni)
 	{
@@ -54,14 +54,14 @@ public class AuthorController
 						};
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readauthor')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/searchByName")
 	public List<AuthorNto> searchByName(@RequestParam("name") @Size(min = 1, max = 20) String name)
 	{
 		return authorService.findByNameContainingIgnoreCaseNto(name);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
+	@PreAuthorize("hasRole('Admin')")
 	@PutMapping("/update")
 	public ResponseEntity<AuthorNto> updateAuthor(@RequestBody @Valid AuthorUpdateNto authorUpdateNto)
 	{
@@ -74,7 +74,7 @@ public class AuthorController
 						};
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updateauthor')")
+	@PreAuthorize("hasRole('Admin')")
 	@PutMapping("/updateIsni")
 	public ResponseEntity<Integer> updateIsni(
 					@RequestParam("isni") @Size(min = 16, max = 16) String isni,

@@ -22,14 +22,14 @@ public class BookController
 	@Autowired
 	BookService bookService;
 	
-	@PreAuthorize("hasAuthority('SCOPE_readbook')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping
 	public ResponseEntity<List<BookNto>> getAllBooks()
 	{
 		return new ResponseEntity<>(bookService.getAllBooksNto(), HttpStatus.OK);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
+	@PreAuthorize("hasRole('Admin') and hasAuthority('updatebook')")
 	@PostMapping
 	public ResponseEntity<BookNto> addBook(@RequestBody @Valid  BookNto book)
 	{
@@ -42,7 +42,7 @@ public class BookController
 						};
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readbook')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/findByIsbn")
 	public ResponseEntity<BookNto> findByIsbn(@RequestParam("isbn") @Size(min = 13, max = 13)  String isbn)
 	{
@@ -51,21 +51,21 @@ public class BookController
 						.orElse(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readbook')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/findByTitle")
 	public ResponseEntity<List<BookNto>> findByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleNto(title), HttpStatus.OK);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_readbook')")
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/searchByTitle")
 	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
 		return new ResponseEntity<>(bookService.findByTitleContainingIgnoreCaseNto(title), HttpStatus.OK);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
+	@PreAuthorize("hasRole('Admin')")
 	@DeleteMapping("/isbn/{isbn}")
 	public ResponseEntity<String> deleteBookByIsbn(@PathVariable @Size(min = 13, max = 13) String isbn)
 	{
@@ -75,7 +75,7 @@ public class BookController
 		return new ResponseEntity<>("Book deleted successfully", HttpStatus.OK);
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
+	@PreAuthorize("hasRole('Admin')")
 	@PutMapping("/update")
 	public ResponseEntity<BookNto> updateBook(@RequestBody @Valid  BookUpdateNto bookUpdateNto)
 	{
@@ -88,7 +88,7 @@ public class BookController
 						};
 	}
 	
-	@PreAuthorize("hasAuthority('SCOPE_updatebook')")
+	@PreAuthorize("hasRole('Admin')")
 	@PutMapping("/updateIsbn")
 	public ResponseEntity<Integer> updateIsbn(
 					@RequestParam @Size(min = 13, max = 13) String isbn,
