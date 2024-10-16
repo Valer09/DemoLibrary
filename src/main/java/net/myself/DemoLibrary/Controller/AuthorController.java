@@ -21,7 +21,7 @@ public class AuthorController
 	@Autowired
 	private AuthorService authorService;
 	
-	@PreAuthorize("hasRole('User')")
+	@PreAuthorize("hasRole('Admin')")
 	@PostMapping
 	public ResponseEntity<AuthorNto> addAuthor(@RequestBody @Valid AuthorNto authorNto)
 	{
