@@ -1,20 +1,9 @@
 package net.myself.DemoLibrary.Controller;
-
-import jakarta.annotation.security.PermitAll;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
-import net.myself.DemoLibrary.Data.NTO.AuthorNto;
-import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
-import net.myself.DemoLibrary.Data.NTO.TokenNto;
-import net.myself.DemoLibrary.Service.ServiceResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.ConditionalOnDefaultWebSecurity;
 import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.HashMap;
 import java.util.Map;
 

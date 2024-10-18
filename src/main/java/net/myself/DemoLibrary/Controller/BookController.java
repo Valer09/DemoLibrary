@@ -13,8 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-// TODO:
-// Input verification
 @RestController
 @RequestMapping(value = "/books", produces = {"application/vnd.DemoLibrary.api.v1.0+json"})
 public class BookController

@@ -8,7 +8,6 @@ import java.util.Map;
 import static java.lang.ThreadLocal.withInitial;
 
 @Component
-
 public class TestContextCache
 {
 	private final ThreadLocal<Map<String, Object>> testContexts = withInitial(HashMap::new);

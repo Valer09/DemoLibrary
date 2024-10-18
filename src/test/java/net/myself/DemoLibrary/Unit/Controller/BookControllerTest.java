@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.myself.DemoLibrary.BookControllerTestConfig;
+import net.myself.DemoLibrary.ControllerTestConfig;
 import net.myself.DemoLibrary.Controller.BookController;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(BookController.class)
-@Import(BookControllerTestConfig.class)
+@Import(ControllerTestConfig.class)
 public class BookControllerTest
 {
 	@Autowired
@@ -89,7 +89,7 @@ public class BookControllerTest
 		AuthorNto aut = getAuthor();
 		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(), aut)));
 		
-		mockMvc.perform(bookControllerEndPointsMap.findByIbsn(isbn))
+		mockMvc.perform(bookControllerEndPointsMap.findByIsbn(isbn))
 						.andExpect(status().isOk())
 						.andExpect(MockMvcResultMatchers.jsonPath("$.isbn").value(isbn));
 		
