@@ -27,7 +27,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 * */
 
 @SpringBootApplication
-@EnableMethodSecurity
 public class DemoLibraryApplication
 {
 	public static void main(String[] args) {

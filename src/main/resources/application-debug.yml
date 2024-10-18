@@ -1,0 +1,24 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          audiences:
+            - https://DemoLibraryAuthApi
+          issuer-uri: https://dev-ijzwld8inlw3zyy2.eu.auth0.com/
+
+
+auth0:
+  domain: dev-ijzwld8inlw3zyy2.eu.auth0.com
+  token-url: https://dev-ijzwld8inlw3zyy2.eu.auth0.com/oauth/token
+  client-id: j4hbaZVAfJKKEWPkqCM76NNNLBhHDB1W
+  client-secret: FeP0dZkq_gkQXS8HkLhh0VxyR1fFSG4MkAZyeTqgr5UaWRhnXmiHY68W2Gy1mphw
+  audience: https://DemoLibraryAuthApi

@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          audiences:
+            - https://DemoLibraryAuthApi
+          issuer-uri: https://dev-ijzwld8inlw3zyy2.eu.auth0.com/
