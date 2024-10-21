@@ -2,19 +2,14 @@ spring:
   application:
     name: DemoLibrary
   datasource:
-    url: jdbc:h2:mem:demoLibraryDb;
-    driverClassName: org.h2.Driver
-    username: sa
+    url: jdbc:sqlserver://127.0.0.1:1434;encrypt=true;trustServerCertificate=true;databaseName=DemoLibrary
+    username: demoLibraryUser
     password: password
-    platform: h2
   jpa:
     hibernate:
+      dialect: org.hibernate.dialect.SQLServerDialect
       ddl-auto: update
     show-sql: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   security:
     oauth2:
       resource-server:
