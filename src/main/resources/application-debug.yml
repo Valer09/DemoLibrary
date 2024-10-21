@@ -1,4 +1,12 @@
 spring:
+  application:
+    name: DemoLibrary
+  datasource:
+    url: jdbc:h2:mem:demoLibraryDb;
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+    platform: h2
   jpa:
     hibernate:
       ddl-auto: update
