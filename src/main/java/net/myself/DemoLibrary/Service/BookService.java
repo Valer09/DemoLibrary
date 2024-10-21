@@ -2,8 +2,11 @@ package net.myself.DemoLibrary.Service;
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
+import net.myself.DemoLibrary.Data.Entities.BookRental;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
+import net.myself.DemoLibrary.Data.NTO.BookRentalNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
+import net.myself.DemoLibrary.Data.Repository.IBookRentalRepository;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.VisibleForTesting;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,6 +30,8 @@ public class BookService
 	IBookRepository bookRepository;
 	@Autowired
 	private AuthorService authorService;
+	@Autowired
+	private IBookRentalRepository _rentalRepository;
 	
 	public List<BookNto> getAllBooksNto()
 	{
@@ -123,6 +129,54 @@ public class BookService
 		if(result != 1) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal Server Error");
 		
 		return ServiceResponse.createOk(result);
+	}
+	
+	@Transactional
+	public ServiceResponse<BookRentalNto> rentBook(String userIdFromToken, BookRentalNto bookRentalNto)
+	{
+		Optional<Book> bookOpt = bookRepository.findByIsbn(bookRentalNto.isbn());
+		
+		if(bookOpt.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "book not found");
+		
+		
+		
+		Optional<BookRental> activeRental = _rentalRepository.findByBookAndState(bookOpt.get(), BookRental.RENTED);
+		if(activeRental.isPresent())
+			return ServiceResponse.createError(ServiceResult.CONFLICT, "the book is already rented");
+		
+		var saved = _rentalRepository.save(BookRental.createTransientForNewRental(userIdFromToken, bookOpt.get()));
+		
+		Hibernate.initialize(saved.getBook());
+		Hibernate.initialize(saved.getBook().getAuthor());
+		
+		return ServiceResponse.createOk(BookRentalNto.createFrom(saved));
+	}
+	
+	public ServiceResponse<List<BookRentalNto>> getAllRentals(String userIdFromToken)
+	{
+		
+		List<BookRental> rentals = _rentalRepository.findByUserId(userIdFromToken);
+		
+		return ServiceResponse.createOk(rentals.stream().map(BookRentalNto::createFrom).toList());
+	}
+	
+	@Transactional
+	public ServiceResponse<BookRentalNto> completeRenting(String userIdFromToken, String isbn)
+	{
+		var book = bookRepository.findByIsbn(isbn);
+		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "book not found");
+		
+		var renting = _rentalRepository.findByBookAndState(book.get(), BookRental.RENTED);
+		if(renting.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "renting not found");
+		
+		BookRental bookRental = renting.get();
+		if(!bookRental.getState().equals(BookRental.RENTED)) return ServiceResponse.createError(ServiceResult.CONFLICT, "renting is not ongoing");
+		
+		bookRental.completeRenting();
+		
+		_rentalRepository.save(bookRental);
+		
+		return ServiceResponse.createOk(BookRentalNto.createFrom(bookRental));
 	}
 }
 
