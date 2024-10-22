@@ -62,4 +62,46 @@ public class RentalController
 							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 						};
 	}
+	
+	@PreAuthorize("hasRole('Admin')")
+	@GetMapping("/admin/getUserRentals")
+	public ResponseEntity<List<BookRentalNto>> getUserRentals(@RequestParam("userId") String userId)
+	{
+		var serviceResponse = bookService.getAllRentals(addOauthPrefix(userId));
+		if(!serviceResponse.isOk()) return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(serviceResponse.get(), HttpStatus.OK);
+	}
+	
+	@PreAuthorize("hasRole('Admin')")
+	@PostMapping("admin/rentBookToUser")
+	public ResponseEntity<BookRentalNto> rentBookToUser(@RequestBody @Valid BookRentalNto bookRentalNto, @RequestParam String userId )
+	{
+		
+		var serviceResponse = bookService.rentBook(addOauthPrefix(userId), bookRentalNto);
+		return switch(serviceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(serviceResponse.get(), HttpStatus.CREATED);
+							case CONFLICT -> new ResponseEntity<>(null, HttpStatus.CONFLICT);
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+						};
+	}
+	
+	@PreAuthorize("hasRole('Admin')")
+	@PutMapping("/completeRentingToUser")
+	public ResponseEntity<BookRentalNto> completeRentingToUser(@RequestParam @Size(min = 13, max = 13) String isbn, @RequestParam String userId)
+	{
+		var serviceResponse = bookService.completeRenting(addOauthPrefix(userId), isbn);
+		return switch(serviceResponse.getResult())
+						{
+							case OK -> new ResponseEntity<>(serviceResponse.get(), HttpStatus.OK);
+							case NOT_FOUND -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+							default -> new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+						};
+	}
+	
+	private static String addOauthPrefix(String userId)
+	{
+		return "auth0|" + userId;
+	}
 }

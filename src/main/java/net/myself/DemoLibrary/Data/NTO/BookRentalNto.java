@@ -12,7 +12,8 @@ public record BookRentalNto(
 				String title,
 				String author,
 				LocalDate startDate,
-				LocalDate endDateDate){
+				LocalDate endDateDate)
+{
 	public static BookRentalNto createFrom(BookRental saved)
 	{
 		Book book = saved.getBook();
