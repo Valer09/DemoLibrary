@@ -1,6 +1,7 @@
 package net.myself.DemoLibrary.Data.Repository;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -31,4 +32,6 @@ public interface IBookRepository extends JpaRepository<Book, Long>
 	@Modifying
 	@Query("UPDATE Book b SET b.isbn = :newIsbn WHERE b.id = :bookId")
 	int updateIsbnById(@Positive long bookId, @Size(min = 13, max = 13)String newIsbn);
+	
+	List<Book> findByAuthor(Author author);
 }

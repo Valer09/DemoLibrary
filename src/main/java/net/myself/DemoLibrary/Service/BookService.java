@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -177,6 +176,13 @@ public class BookService
 		_rentalRepository.save(bookRental);
 		
 		return ServiceResponse.createOk(BookRentalNto.createFrom(bookRental));
+	}
+	
+	public ServiceResponse<List<BookNto>> findByAuthor(String isni)
+	{
+		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
+		var author = authorService.findAuthorByIsni(isni).get();
+		return ServiceResponse.createOk(bookRepository.findByAuthor(author).stream().map(BookNto::fromBook).toList());
 	}
 }
 

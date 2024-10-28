@@ -57,6 +57,15 @@ public class BookController
 	}
 	
 	@PreAuthorize("hasRole('User')")
+	@GetMapping("/findByAuthor")
+	public ResponseEntity<List<BookNto>> findByAuthor(@RequestParam("isni") @Size(min = 16, max = 16) String isni)
+	{
+		var serviceResponse = bookService.findByAuthor(isni);
+		if(serviceResponse.getResult().equals(ServiceResult.NOT_FOUND)) return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(serviceResponse.get(), HttpStatus.OK);
+	}
+	
+	@PreAuthorize("hasRole('User')")
 	@GetMapping("/searchByTitle")
 	public ResponseEntity<List<BookNto>> searchByTitle(@RequestParam("title") @Size(min = 1, max = 40) String title)
 	{
