@@ -1,4 +1,5 @@
 package net.myself.DemoLibrary.Service;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.Author;
 import net.myself.DemoLibrary.Data.Entities.Book;
@@ -20,6 +21,8 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static net.myself.DemoLibrary.Data.Entities.BookRental.RENTED;
 
 @Service
 public class BookService
@@ -139,7 +142,7 @@ public class BookService
 		
 		
 		
-		Optional<BookRental> activeRental = _rentalRepository.findByBookAndState(bookOpt.get(), BookRental.RENTED);
+		Optional<BookRental> activeRental = _rentalRepository.findByBookAndState(bookOpt.get(), RENTED);
 		if(activeRental.isPresent())
 			return ServiceResponse.createError(ServiceResult.CONFLICT, "the book is already rented");
 		
@@ -165,11 +168,11 @@ public class BookService
 		var book = bookRepository.findByIsbn(isbn);
 		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "book not found");
 		
-		var renting = _rentalRepository.findByBookAndState(book.get(), BookRental.RENTED);
+		var renting = _rentalRepository.findByBookAndState(book.get(), RENTED);
 		if(renting.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "renting not found");
 		
 		BookRental bookRental = renting.get();
-		if(!bookRental.getState().equals(BookRental.RENTED)) return ServiceResponse.createError(ServiceResult.CONFLICT, "renting is not ongoing");
+		if(!bookRental.getState().equals(RENTED)) return ServiceResponse.createError(ServiceResult.CONFLICT, "renting is not ongoing");
 		
 		bookRental.completeRenting();
 		
@@ -183,6 +186,15 @@ public class BookService
 		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
 		var author = authorService.findAuthorByIsni(isni).get();
 		return ServiceResponse.createOk(bookRepository.findByAuthor(author).stream().map(BookNto::fromBook).toList());
+	}
+	
+	public boolean isRented(String isbn)
+	{
+		var book = bookRepository.findByIsbn(isbn);
+		if(book.isEmpty()) throw new EntityNotFoundException("book doesn't exists");
+		var result = _rentalRepository.findByBookAndState(book.get(), RENTED);
+		
+		return result.isPresent();
 	}
 }
 

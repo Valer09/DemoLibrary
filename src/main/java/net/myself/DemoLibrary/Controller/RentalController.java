@@ -50,6 +50,15 @@ public class RentalController
 	}
 	
 	@PreAuthorize("hasRole('User')")
+	@GetMapping("/getBookAvailability/{isbn}")
+	public ResponseEntity<String> getBookAvailability(@PathVariable @Size(min = 13, max = 13) String isbn)
+	{
+		
+		var serviceResponse = bookService.isRented(isbn);
+		return new ResponseEntity<>(serviceResponse ? "Not available" : "Available", HttpStatus.OK);
+	}
+	
+	@PreAuthorize("hasRole('User')")
 	@PutMapping("/completeRenting")
 	public ResponseEntity<BookRentalNto> completeRenting(@RequestParam @Size(min = 13, max = 13) String isbn)
 	{
