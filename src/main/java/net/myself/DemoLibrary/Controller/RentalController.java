@@ -53,7 +53,6 @@ public class RentalController
 	@GetMapping("/getBookAvailability/{isbn}")
 	public ResponseEntity<String> getBookAvailability(@PathVariable @Size(min = 13, max = 13) String isbn)
 	{
-		
 		var serviceResponse = bookService.isRented(isbn);
 		return new ResponseEntity<>(serviceResponse ? "Not available" : "Available", HttpStatus.OK);
 	}
