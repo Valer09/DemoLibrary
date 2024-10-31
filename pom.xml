@@ -11,6 +11,7 @@
 	<groupId>net.myself</groupId>
 	<artifactId>DemoLibrary</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>DemoLibrary</name>
 	<description>Training for interviews</description>
 	<url/>
@@ -140,6 +141,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>demoLibraryApi</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

@@ -2,6 +2,7 @@ package net.myself.DemoLibrary;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,7 +28,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 * */
 
 @SpringBootApplication
-public class DemoLibraryApplication
+public class DemoLibraryApplication extends SpringBootServletInitializer
 {
 	public static void main(String[] args) {
 		SpringApplication.run(DemoLibraryApplication.class, args);
