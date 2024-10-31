@@ -2,6 +2,7 @@ package net.myself.DemoLibrary.Data.Entities;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
 
@@ -71,6 +72,12 @@ public class Book
 	{
 		return publishedDate;
 	}
+	public String getState(){return this.state;}
+	
+	@Formula("(SELECT CASE WHEN COUNT(br.id) > 0 THEN 'Not available' ELSE 'Available' END " +
+					"FROM book_rental br WHERE br.book_isbn = isbn AND br.state = 'RENTED')")
+	private String state;
+	
 	
 	public void update(BookUpdate newBook)
 	{

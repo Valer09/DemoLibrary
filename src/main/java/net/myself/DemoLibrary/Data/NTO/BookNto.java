@@ -18,11 +18,12 @@ public record BookNto(
 				String authorIsni,
 				@PastOrPresent
 				LocalDate publishedDate,
+				String state,
 				@JsonIgnore AuthorNto authorNto)
 {
 	public static BookNto fromBook(Book book)
 	{
 		var author = book.getAuthor();
-		return new BookNto(book.getTitle(),book.getIsbn(), author.getFullName(), author.getIsni(), book.getPublishedDate(), AuthorNto.fromAuthor(book.getAuthor()));
+		return new BookNto(book.getTitle(),book.getIsbn(), author.getFullName(), author.getIsni(), book.getPublishedDate(), book.getState(),AuthorNto.fromAuthor(book.getAuthor()));
 	}
 }

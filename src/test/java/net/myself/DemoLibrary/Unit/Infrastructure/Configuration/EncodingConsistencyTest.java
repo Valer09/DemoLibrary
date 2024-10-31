@@ -19,7 +19,7 @@ public class EncodingConsistencyTest
 	void entityNtoTest()
 	{
 		var author = getStaticAuthor();
-		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), author);
+		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), "", author);
 		
 		Book bookEntity = Book.createTransientBook(bookNto);
 		
@@ -36,7 +36,7 @@ public class EncodingConsistencyTest
 	void jacksonTest() throws Exception
 	{
 		var author = getStaticAuthor();
-		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), author);
+		BookNto bookNto = new BookNto("Françoise Sagan", "test", author.fullName(), author.isni(),  LocalDate.now(), "", author);
 		BookNto fromJson = jackson.readValue(jackson.writeValueAsString(bookNto), BookNto.class);
 		
 		Assertions.assertThat(bookNto.title()).isEqualTo(fromJson.title());

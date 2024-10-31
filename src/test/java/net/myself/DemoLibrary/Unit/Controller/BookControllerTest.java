@@ -87,7 +87,7 @@ public class BookControllerTest
 	{
 		String isbn = "aaaaaaaaaaaaa";
 		AuthorNto aut = getAuthor();
-		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(), aut)));
+		when(bookService.findByIsbnNto(isbn)).thenReturn(Optional.of(new BookNto("test",isbn,aut.name(), aut.isni(), LocalDate.now(),"", aut)));
 		
 		mockMvc.perform(bookControllerEndPointsMap.findByIsbn(isbn))
 						.andExpect(status().isOk())
@@ -105,8 +105,8 @@ public class BookControllerTest
 		AuthorNto aut2 = getAuthor();
 		List<BookNto> books = new ArrayList<>(Arrays.asList
 						(
-										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), aut),
-										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2)
+										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), "",aut),
+										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), "",aut2)
 						));
 		
 		when(bookService.findByTitleNto(title)).thenReturn(books);
@@ -129,9 +129,9 @@ public class BookControllerTest
 		AuthorNto aut2 = getAuthor();
 		List<BookNto> books = new ArrayList<>(Arrays.asList
 						(
-										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), aut),
-										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2),
-										new BookNto("contains"+title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), aut2))
+										new BookNto(title, aut.isni(), aut.name(), aut.isni(), LocalDate.now(), "",aut),
+										new BookNto(title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), "",aut2),
+										new BookNto("contains"+title, aut2.isni(), aut2.name(), aut2.isni(), LocalDate.now(), "",aut2))
 						);
 		
 		when(bookService.findByTitleContainingIgnoreCaseNto(title)).thenReturn(books);
@@ -196,7 +196,7 @@ public class BookControllerTest
 	{
 		Book book = BookHelper.getRandomBook();
 		AuthorNto author = getAuthor();
-		BookNto newBook = new BookNto(book.getTitle()+"ed", book.getIsbn(), author.fullName(), author.isni(), LocalDate.now().minus(3, ChronoUnit.YEARS), author);
+		BookNto newBook = new BookNto(book.getTitle()+"ed", book.getIsbn(), author.fullName(), author.isni(), LocalDate.now().minus(3, ChronoUnit.YEARS), "", author);
 		
 		BookUpdateNto nto = new BookUpdateNto(book.getIsbn(), newBook.title(), newBook.authorIsni(), newBook.publishedDate());
 		

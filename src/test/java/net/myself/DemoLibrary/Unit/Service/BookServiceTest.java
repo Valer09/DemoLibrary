@@ -81,11 +81,11 @@ public class BookServiceTest
 		var auth = getAuthor();
 		var authFullName = getAuthorFullName(auth);
 		List<Book> list = new ArrayList<>(Arrays.asList(
-						Book.createTransientBook(new BookNto("title", "a", authFullName, auth.isni(), LocalDate.now(), auth)),
-						Book.createTransientBook(new BookNto("titleOnStart","b", authFullName, auth.isni(), LocalDate.now(), auth)),
-						Book.createTransientBook(new BookNto("EndWithtitle","c", authFullName, auth.isni(), LocalDate.now(), auth)),
-						Book.createTransientBook(new BookNto("InTheMiddletitleIs","d", authFullName, auth.isni(), LocalDate.now(), auth)),
-						Book.createTransientBook(new BookNto("TITLEisuppercase","e", authFullName, auth.isni(), LocalDate.now(), auth))));
+						Book.createTransientBook(new BookNto("title", "a", authFullName, auth.isni(), LocalDate.now(), "", auth)),
+						Book.createTransientBook(new BookNto("titleOnStart","b", authFullName, auth.isni(), LocalDate.now(), "", auth)),
+						Book.createTransientBook(new BookNto("EndWithtitle","c", authFullName, auth.isni(), LocalDate.now(), "", auth)),
+						Book.createTransientBook(new BookNto("InTheMiddletitleIs","d", authFullName, auth.isni(), LocalDate.now(), "", auth)),
+						Book.createTransientBook(new BookNto("TITLEisuppercase","e", authFullName, auth.isni(), LocalDate.now(), "", auth))));
 		
 		when(bookRepositoryMock.findByTitleContainingIgnoreCase("title")).thenReturn(list);
 		

@@ -28,7 +28,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 * */
 
 @SpringBootApplication
-public class DemoLibraryApplication extends SpringBootServletInitializer
+public class DemoLibraryApplication
 {
 	public static void main(String[] args) {
 		SpringApplication.run(DemoLibraryApplication.class, args);
