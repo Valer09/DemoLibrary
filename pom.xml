@@ -140,6 +140,37 @@
 
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<properties>
+				<spring-boot.run.profiles>dev</spring-boot.run.profiles>
+				<spring.profiles.active>dev</spring.profiles.active>
+			</properties>
+		</profile>
+	<profile>
+		<id>debug</id>
+		<properties>
+			<spring-boot.run.profiles>debug</spring-boot.run.profiles>
+			<spring.profiles.active>debug</spring.profiles.active>
+		</properties>
+	</profile>
+		<profile>
+			<id>test</id>
+			<properties>
+				<spring-boot.run.profiles>test</spring-boot.run.profiles>
+				<spring.profiles.active>test</spring.profiles.active>
+			</properties>
+		</profile>
+	<profile>
+		<id>staging</id>
+		<properties>
+			<spring-boot.run.profiles>staging</spring-boot.run.profiles>
+			<spring.profiles.active>staging</spring.profiles.active>
+		</properties>
+	</profile>
+	</profiles>
+
 	<build>
 		<finalName>demoLibraryApi</finalName>
 		<plugins>
@@ -159,6 +190,9 @@
 						<id>staging</id>
 						<properties>
 							<spring-boot.run.profiles>staging</spring-boot.run.profiles>
+						</properties>
+						<properties>
+							<spring-boot.run.profiles>test</spring-boot.run.profiles>
 						</properties>
 					</profiles>
 				</configuration>
