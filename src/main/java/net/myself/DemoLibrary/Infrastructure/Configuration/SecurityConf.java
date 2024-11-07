@@ -40,14 +40,19 @@ public class SecurityConf{
 		return http.build();
 	}
 	@Bean
-	WebMvcConfigurer corsConfigurer()
+	WebMvcConfigurer corsConfigure()
 	{
 		return new WebMvcConfigurer()
 		{
 			@Override
 			public void addCorsMappings(CorsRegistry registry)
 			{
-				registry.addMapping("/**").allowedOrigins(frontEndDomain);
+				
+				registry.addMapping("/**").allowedOrigins(frontEndDomain)
+								.allowedOrigins(frontEndDomain)
+								.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+								.allowedHeaders("Authorization", "Content-Type", "host")
+								.allowCredentials(true);;
 			}
 		};
 	}

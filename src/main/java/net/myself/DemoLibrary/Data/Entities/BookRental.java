@@ -1,8 +1,10 @@
 package net.myself.DemoLibrary.Data.Entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 public class BookRental
@@ -12,6 +14,9 @@ public class BookRental
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@UuidGenerator
+	private UUID rentalCode;
 	
 	@Column(name = "user_id", nullable = false)
 	private String userId;
@@ -29,9 +34,10 @@ public class BookRental
 	@Column(name = "state", nullable = false)
 	private String state;
 	
-	public BookRental(Long id, String userId, Book book, LocalDate startingDate, LocalDate endingDate, String state)
+	public BookRental(Long id, UUID rentalCode, String userId, Book book, LocalDate startingDate, LocalDate endingDate, String state)
 	{
 		this.id = id;
+		this.rentalCode = rentalCode;
 		this.userId = userId;
 		this.book = book;
 		this.startingDate = startingDate;
@@ -90,5 +96,10 @@ public class BookRental
 	public String getState()
 	{
 		return state;
+	}
+	
+	public UUID getRentalCode()
+	{
+		return rentalCode;
 	}
 }

@@ -57,6 +57,7 @@ public class RentalController
 		return new ResponseEntity<>(serviceResponse ? "Not available" : "Available", HttpStatus.OK);
 	}
 	
+	@Deprecated
 	@PreAuthorize("hasRole('User')")
 	@PutMapping("/completeRenting")
 	public ResponseEntity<BookRentalNto> completeRenting(@RequestParam @Size(min = 13, max = 13) String isbn)
@@ -96,7 +97,7 @@ public class RentalController
 	}
 	
 	@PreAuthorize("hasRole('Admin')")
-	@PutMapping("/completeRentingToUser")
+	@PutMapping("/admin/completeRentingToUser")
 	public ResponseEntity<BookRentalNto> completeRentingToUser(@RequestParam @Size(min = 13, max = 13) String isbn, @RequestParam String userId)
 	{
 		var serviceResponse = bookService.completeRenting(addOauthPrefix(userId), isbn);
