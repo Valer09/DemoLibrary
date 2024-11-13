@@ -16,15 +16,15 @@ import java.util.Optional;
 public interface IBookRepository extends JpaRepository<Book, Long>
 {
 	//define custom query
-	List<Book> findByTitle(@Size(min = 1, max = 40) String title);
+	List<Book> findByTitleAndDeletedFalse(@Size(min = 1, max = 40) String title);
 	
-	List<Book> findByTitleContainingIgnoreCase(@Size(min = 1, max = 40) String title);
+	List<Book> findByTitleContainingIgnoreCaseAndDeletedFalse(@Size(min = 1, max = 40) String title);
 	
-	List<Book> findByTitleAndIsbn(@Size(min = 1, max = 40) String title,  @Size(min = 13, max = 13) String isbn);
+	List<Book> findByTitleAndIsbnAndDeletedFalse(@Size(min = 1, max = 40) String title, @Size(min = 13, max = 13) String isbn);
 	
-	Optional<Book> findByIsbn(@Size(min = 13, max = 13) String isbn);
+	Optional<Book> findByIsbnAndDeletedFalse(@Size(min = 13, max = 13) String isbn);
 	
-	boolean existsByIsbn(@Size(min = 13, max = 13) String isbn);
+	boolean existsByIsbnAndDeletedFalse(@Size(min = 13, max = 13) String isbn);
 	
 	void deleteByIsbn(@Size(min = 13, max = 13) String isbn);
 	
@@ -33,5 +33,8 @@ public interface IBookRepository extends JpaRepository<Book, Long>
 	@Query("UPDATE Book b SET b.isbn = :newIsbn WHERE b.id = :bookId")
 	int updateIsbnById(@Positive long bookId, @Size(min = 13, max = 13)String newIsbn);
 	
-	List<Book> findByAuthor(Author author);
+	List<Book> findByAuthorAndDeletedFalse(Author author);
+	
+	@Query("SELECT b FROM Book b WHERE b.deleted = false")
+	List<Book> findAllAndDeletedFalse();
 }

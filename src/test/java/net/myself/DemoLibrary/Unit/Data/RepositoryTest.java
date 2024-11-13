@@ -54,7 +54,7 @@ public class RepositoryTest
 		
 		for(Book b : list) bookRepository.save(b);
 		
-		var res = bookRepository.findByTitleContainingIgnoreCase("title");
+		var res = bookRepository.findByTitleContainingIgnoreCaseAndDeletedFalse("title");
 		
 		Assertions.assertThat(res.size()).isEqualTo(6);
 		for(int i = 0; i < list.size() - 1; i++)

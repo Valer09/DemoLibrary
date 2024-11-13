@@ -1,8 +1,10 @@
 package net.myself.DemoLibrary.Data.Entities;
+import io.cucumber.java.DefaultDataTableCellTransformer;
 import jakarta.persistence.*;
 import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import org.hibernate.annotations.Formula;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.LocalDate;
 
@@ -19,8 +21,20 @@ public class Book
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "author_id")
 	private Author author;
+	private boolean deleted;
 	
 	public Book(){}
+	
+	public Book(long id, String title, Author author, String isbn, LocalDate publishedDate, boolean deleted)
+	{
+		this.id = id;
+		this.setTitle(title);
+		this.setAuthor(author);
+		this.setIsbn(isbn);
+		this.setPublishedDate(publishedDate);
+		this.deleted = deleted;
+	}
+	
 	public Book(long id, String title, Author author, String isbn, LocalDate publishedDate)
 	{
 		this.id = id;
@@ -74,8 +88,9 @@ public class Book
 	}
 	public String getState(){return this.state;}
 	
-	@Formula("(SELECT CASE WHEN COUNT(br.id) > 0 THEN 'Not available' ELSE 'Available' END " +
-					"FROM book_rental br WHERE br.book_isbn = isbn AND br.state = 'RENTED')")
+	@Formula("(CASE WHEN deleted = true THEN 'BOOK DELETED' " +
+					"ELSE (SELECT CASE WHEN COUNT(br.id) > 0 THEN 'Not available' ELSE 'Available' END " +
+					"FROM book_rental br WHERE br.book_isbn = isbn AND br.state = 'RENTED') END)")
 	private String state;
 	
 	
@@ -85,7 +100,10 @@ public class Book
 		setAuthor(newBook.author());
 		setPublishedDate(newBook.publishedDate());
 	}
-	
+	public void deleteBook()
+	{
+		this.deleted = true;
+	}
 	private void setTitle(String title)
 	{
 		this.title = title;

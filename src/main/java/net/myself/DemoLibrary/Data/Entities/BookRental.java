@@ -11,6 +11,7 @@ public class BookRental
 {
 	public static final String RENTED = "RENTED";
 	public static final String COMPLETED = "COMPLETED";
+	public static final String DELETED = "BOOK DELETED";
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -101,5 +102,10 @@ public class BookRental
 	public UUID getRentalCode()
 	{
 		return rentalCode;
+	}
+	
+	public void checkDeleted()
+	{
+		this.state = DELETED;
 	}
 }

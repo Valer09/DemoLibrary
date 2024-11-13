@@ -58,21 +58,21 @@ public class BookServiceTest
 	void findByIsbn()
 	{
 		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.of(book));
+		when(bookRepositoryMock.findByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(Optional.of(book));
 		var foundBook = bookService.findByIsbnNto(book.getIsbn());
 		assertEquals(foundBook.get().isbn(), book.getIsbn());
 		assertEquals(foundBook.get().title(), book.getTitle());
-		verify(bookRepositoryMock, times(1)).findByIsbn(book.getIsbn());
+		verify(bookRepositoryMock, times(1)).findByIsbnAndDeletedFalse(book.getIsbn());
 	}
 	
 	@Test
 	void findByTitle()
 	{
 		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.findByTitle(book.getTitle())).thenReturn(new ArrayList<>(List.of(book)));
+		when(bookRepositoryMock.findByTitleAndDeletedFalse(book.getTitle())).thenReturn(new ArrayList<>(List.of(book)));
 		var foundBook = bookService.findByTitleNto(book.getTitle()).get(0);
 		assertEquals(foundBook.isbn(), book.getIsbn());
-		verify(bookRepositoryMock, times(1)).findByTitle(book.getTitle());
+		verify(bookRepositoryMock, times(1)).findByTitleAndDeletedFalse(book.getTitle());
 	}
 	
 	@Test
@@ -87,7 +87,7 @@ public class BookServiceTest
 						Book.createTransientBook(new BookNto("InTheMiddletitleIs","d", authFullName, auth.isni(), LocalDate.now(), "", auth)),
 						Book.createTransientBook(new BookNto("TITLEisuppercase","e", authFullName, auth.isni(), LocalDate.now(), "", auth))));
 		
-		when(bookRepositoryMock.findByTitleContainingIgnoreCase("title")).thenReturn(list);
+		when(bookRepositoryMock.findByTitleContainingIgnoreCaseAndDeletedFalse("title")).thenReturn(list);
 		
 		var result = bookService.findByTitleContainingIgnoreCaseNto("title");
 		assertEquals(result.get(0).isbn(), list.get(0).getIsbn());
@@ -96,7 +96,7 @@ public class BookServiceTest
 		assertEquals(result.get(3).isbn(), list.get(3).getIsbn());
 		assertEquals(result.get(4).isbn(), list.get(4).getIsbn());
 		
-		verify(bookRepositoryMock, times(1)).findByTitleContainingIgnoreCase("title");
+		verify(bookRepositoryMock, times(1)).findByTitleContainingIgnoreCaseAndDeletedFalse("title");
 	}
 	
 	@Test
@@ -105,7 +105,7 @@ public class BookServiceTest
 		
 		Book book = BookHelper.getRandomBook();
 		when(bookRepositoryMock.save(any(Book.class))).thenReturn(book);
-		when(bookRepositoryMock.existsByIsbn(book.getIsbn())).thenReturn(false);
+		when(bookRepositoryMock.existsByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(false);
 		when(authorServiceMock.existsByIsni(book.getAuthor().getIsni())).thenReturn(true);
 		when(authorServiceMock.findAuthorByIsni(book.getAuthor().getIsni())).thenReturn(ServiceResponse.createOk(book.getAuthor()));
 		
@@ -127,7 +127,7 @@ public class BookServiceTest
 	void deleteBookByIsbn()
 	{
 		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.existsByIsbn(book.getIsbn())).thenReturn(true);
+		when(bookRepositoryMock.existsByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(true);
 		Assertions.assertThat(bookService.deleteBookByIsbn(book.getIsbn()).getResult()).isEqualTo(ServiceResult.OK);
 		verify(bookRepositoryMock, times(1)).deleteByIsbn(book.getIsbn());
 	}
@@ -136,7 +136,7 @@ public class BookServiceTest
 	void deleteBookByIsbnNotFound()
 	{
 		Book book = BookHelper.getRandomBook();
-		when(bookRepositoryMock.existsByIsbn(book.getIsbn())).thenReturn(false);
+		when(bookRepositoryMock.existsByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(false);
 		Assertions.assertThat(bookService.deleteBookByIsbn(book.getIsbn()).getResult()).isEqualTo(ServiceResult.NOT_FOUND);
 		verify(bookRepositoryMock, never()).deleteByIsbn(any());
 	}
@@ -168,7 +168,7 @@ public class BookServiceTest
 		updatedBook.update(new BookUpdate(temp.getTitle(), temp.getAuthor(), temp.getPublishedDate()));
 		Optional<Book> optionalBookCopy = Optional.of(book);
 		
-		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(optionalBookCopy);
+		when(bookRepositoryMock.findByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(optionalBookCopy);
 		when(bookRepositoryMock.save(optionalBookCopy.get())).thenReturn(updatedBook);
 		when(authorServiceMock.existsByIsni(temp.getAuthor().getIsni())).thenReturn(true);
 		when(authorServiceMock.findAuthorByIsni(temp.getAuthor().getIsni())).thenReturn(ServiceResponse.createOk(temp.getAuthor()));
@@ -190,7 +190,7 @@ public class BookServiceTest
 		Book bookCopy =  Book.createTransientBook(BookNto.fromBook(book));
 		book.update(new BookUpdate(temp.getTitle(), temp.getAuthor(), temp.getPublishedDate()));
 		
-		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.of(bookCopy));
+		when(bookRepositoryMock.findByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(Optional.of(bookCopy));
 		when(authorServiceMock.existsByIsni(temp.getAuthor().getIsni())).thenReturn(false);
 		
 		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), temp.getTitle(), temp.getAuthor().getIsni(), temp.getPublishedDate()));
@@ -206,7 +206,7 @@ public class BookServiceTest
 	{
 		Book book = BookHelper.getRandomBook();
 		
-		when(bookRepositoryMock.findByIsbn(book.getIsbn())).thenReturn(Optional.empty());
+		when(bookRepositoryMock.findByIsbnAndDeletedFalse(book.getIsbn())).thenReturn(Optional.empty());
 		
 		var result = bookService.updateBookFromNto(new BookUpdateNto(book.getIsbn(), book.getTitle(), book.getAuthor().getIsni(), book.getPublishedDate()));
 		Assertions.assertThat(result.getResult()).isEqualTo(ServiceResult.NOT_FOUND);
