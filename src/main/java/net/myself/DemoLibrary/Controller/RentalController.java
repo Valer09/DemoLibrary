@@ -2,9 +2,7 @@ package net.myself.DemoLibrary.Controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
-import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookRentalNto;
-import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Service.BookService;
 import net.myself.DemoLibrary.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,3 +112,4 @@ public class RentalController
 		return "auth0|" + userId;
 	}
 }
+

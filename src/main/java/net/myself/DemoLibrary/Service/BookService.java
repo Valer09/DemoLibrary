@@ -1,14 +1,14 @@
 package net.myself.DemoLibrary.Service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import net.myself.DemoLibrary.Data.Entities.Author;
-import net.myself.DemoLibrary.Data.Entities.Book;
-import net.myself.DemoLibrary.Data.Entities.BookRental;
+import net.myself.DemoLibrary.Data.Entities.*;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import net.myself.DemoLibrary.Data.NTO.BookRentalNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRentalRepository;
 import net.myself.DemoLibrary.Data.Repository.IBookRepository;
+import net.myself.DemoLibrary.Data.Repository.IDeletedBookRentalRepository;
+import net.myself.DemoLibrary.Data.Repository.IDeletedBookRepository;
 import net.myself.DemoLibrary.Infrastructure.Configuration.VisibleForTesting;
 import net.myself.DemoLibrary.Infrastructure.GlobalControllerExceptionHandler;
 import net.myself.DemoLibrary.Model.BookUpdate;
@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,30 +36,36 @@ public class BookService
 	@Autowired
 	private IBookRentalRepository _rentalRepository;
 	
+	@Autowired
+	private IDeletedBookRepository _deletedBookRepository;
+	
+	@Autowired
+	private IDeletedBookRentalRepository _deletedBookRentalRepository;
+	
 	public List<BookNto> getAllBooksNto()
 	{
-		return bookRepository.findAllAndDeletedFalse().stream().map(BookNto::fromBook).collect(Collectors.toList());
+		return bookRepository.findAll().stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
 	public Optional<BookNto> findByIsbnNto(String isbn)
 	{
-		return bookRepository.findByIsbnAndDeletedFalse(isbn).map(BookNto::fromBook);
+		return bookRepository.findByIsbn(isbn).map(BookNto::fromBook);
 	}
 	
 	public List<BookNto> findByTitleNto(String title)
 	{
-		return bookRepository.findByTitleAndDeletedFalse(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
+		return bookRepository.findByTitle(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
 	public List<BookNto> findByTitleContainingIgnoreCaseNto(String title)
 	{
-		return bookRepository.findByTitleContainingIgnoreCaseAndDeletedFalse(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
+		return bookRepository.findByTitleContainingIgnoreCase(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 	
 	@Transactional
 	public ServiceResponse<BookNto> addBookFromNto(BookNto book)
 	{
-		if (bookRepository.existsByIsbnAndDeletedFalse(book.isbn())) return ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists");
+		if (bookRepository.existsByIsbn(book.isbn())) return ServiceResponse.createError(ServiceResult.CONFLICT, "book already exists");
 		if (!authorService.existsByIsni(book.authorIsni())) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "author not found");
 		
 		Author authorByCf = authorService.findAuthorByIsni(book.authorIsni()).get();
@@ -75,15 +82,29 @@ public class BookService
 	@Transactional
 	public ServiceResponse<String> deleteBookByIsbn(String isbn)
 	{
-		if (!bookRepository.existsByIsbnAndDeletedFalse(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
-		Book book = bookRepository.findByIsbnAndDeletedFalse(isbn).get();
-		Optional<BookRental> rental = _rentalRepository.findByBook(book);
-		if(rental.isPresent())
+		if (!bookRepository.existsByIsbn(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
+		Book book = bookRepository.findByIsbn(isbn).get();
+		List<BookRental> rentals = _rentalRepository.findByBook(book);
+		if(!rentals.isEmpty())
 		{
-				book.deleteBook();
-				rental.get().checkDeleted();
-				bookRepository.save(book);
-				_rentalRepository.save(rental.get());
+			for (BookRental ren  : rentals)
+			{
+				if(isRented(ren.getBook().getIsbn()))
+					return ServiceResponse.createError(ServiceResult.CONFLICT, "Book is associated with ongoing rentals!");
+			}
+			
+			var deletedBook = book.getTransientDeletedBook();
+			_deletedBookRepository.save(deletedBook);
+			
+			rentals.forEach(el ->
+			{
+				var deletedBookRental = el.getTransientDeletedBookRental(deletedBook);
+				_deletedBookRentalRepository.save(deletedBookRental);
+				_rentalRepository.deleteById(el.getId());
+			});
+			
+			bookRepository.delete(book);
+			_logger.trace("logically deleted object book with isbn "+isbn);
 		}
 		else bookRepository.deleteByIsbn(isbn);
 		_logger.trace("deleted object book with isbn "+isbn);
@@ -93,7 +114,7 @@ public class BookService
 	@Transactional
 	public ServiceResponse<BookNto> updateBookFromNto(BookUpdateNto bookUpdateNto)
 	{
-		var book = bookRepository.findByIsbnAndDeletedFalse(bookUpdateNto.isbn());
+		var book = bookRepository.findByIsbn(bookUpdateNto.isbn());
 		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
 		
 		String authorIsni = bookUpdateNto.authorIsni();
@@ -132,9 +153,9 @@ public class BookService
 	
 	public ServiceResponse<Integer> updateIsbn(String isbn, String newIsbn)
 	{
-		if(!bookRepository.existsByIsbnAndDeletedFalse(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
-		if(bookRepository.existsByIsbnAndDeletedFalse(newIsbn)) return ServiceResponse.createError(ServiceResult.CONFLICT, "Isbn already existing");
-		var book = bookRepository.findByIsbnAndDeletedFalse(isbn);
+		if(!bookRepository.existsByIsbn(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
+		if(bookRepository.existsByIsbn(newIsbn)) return ServiceResponse.createError(ServiceResult.CONFLICT, "Isbn already existing");
+		var book = bookRepository.findByIsbn(isbn);
 		
 		var result = bookRepository.updateIsbnById(book.get().getId(), newIsbn);
 		if(result != 1) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal Server Error");
@@ -145,7 +166,7 @@ public class BookService
 	@Transactional
 	public ServiceResponse<BookRentalNto> rentBook(String userIdFromToken, BookRentalNto bookRentalNto)
 	{
-		Optional<Book> bookOpt = bookRepository.findByIsbnAndDeletedFalse(bookRentalNto.isbn());
+		Optional<Book> bookOpt = bookRepository.findByIsbn(bookRentalNto.isbn());
 		
 		if(bookOpt.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "book not found");
 		
@@ -166,7 +187,11 @@ public class BookService
 	public ServiceResponse<List<BookRentalNto>> getAllRentals(String userIdFromToken)
 	{
 		
-		List<BookRental> rentals = _rentalRepository.findByUserId(userIdFromToken);
+		List<BookRental> normalRentals = _rentalRepository.findByUserId(userIdFromToken);
+		List<DeletedBookRental> deletedRentals = _deletedBookRentalRepository.findByUserId(userIdFromToken);
+		List<IBookRental> rentals = new ArrayList<>();
+		rentals.addAll(normalRentals);
+		rentals.addAll(deletedRentals);
 		
 		return ServiceResponse.createOk(rentals.stream().map(BookRentalNto::createFrom).toList());
 	}
@@ -174,8 +199,8 @@ public class BookService
 	@Transactional
 	public ServiceResponse<BookRentalNto> completeRenting(String userIdFromToken, String isbn)
 	{
-		var book = bookRepository.findByIsbnAndDeletedFalse(isbn);
-		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "book not found");
+		var book = bookRepository.findByIsbn(isbn);
+		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "book not found");
 		
 		var renting = _rentalRepository.findByBookAndState(book.get(), RENTED);
 		if(renting.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "renting not found");
@@ -194,12 +219,12 @@ public class BookService
 	{
 		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
 		var author = authorService.findAuthorByIsni(isni).get();
-		return ServiceResponse.createOk(bookRepository.findByAuthorAndDeletedFalse(author).stream().map(BookNto::fromBook).toList());
+		return ServiceResponse.createOk(bookRepository.findByAuthor(author).stream().map(BookNto::fromBook).toList());
 	}
 	
 	public boolean isRented(String isbn)
 	{
-		var book = bookRepository.findByIsbnAndDeletedFalse(isbn);
+		var book = bookRepository.findByIsbn(isbn);
 		if(book.isEmpty()) throw new EntityNotFoundException("book doesn't exists");
 		var result = _rentalRepository.findByBookAndState(book.get(), RENTED);
 		

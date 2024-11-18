@@ -16,5 +16,5 @@ public interface IBookRentalRepository extends JpaRepository<BookRental, Long>
 	List<BookRental> findByUserId(String userId);
 	
 	Optional<BookRental> findByBookAndState(Book book, String rented);
-	Optional<BookRental> findByBook(Book book);
+	List<BookRental> findByBook(Book book);
 }

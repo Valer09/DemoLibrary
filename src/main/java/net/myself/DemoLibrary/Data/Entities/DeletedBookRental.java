@@ -1,5 +1,4 @@
 package net.myself.DemoLibrary.Data.Entities;
-
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -7,11 +6,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-public class BookRental implements IBookRental
+public class DeletedBookRental implements IBookRental
 {
-	public static final String RENTED = "RENTED";
-	public static final String COMPLETED = "COMPLETED";
-	public static final String DELETED = "BOOK DELETED";
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -23,7 +19,7 @@ public class BookRental implements IBookRental
 	private String userId;
 	
 	@ManyToOne(fetch=FetchType.EAGER)
-	private Book book;
+	private DeletedBook book;
 	
 	@Column(name = "starting_date", nullable = false)
 	private LocalDate startingDate;
@@ -34,7 +30,7 @@ public class BookRental implements IBookRental
 	@Column(name = "state", nullable = false)
 	private String state;
 	
-	public BookRental(Long id, UUID rentalCode, String userId, Book book, LocalDate startingDate, LocalDate endingDate, String state)
+	public DeletedBookRental(Long id, UUID rentalCode, String userId, DeletedBook book, LocalDate startingDate, LocalDate endingDate, String state)
 	{
 		this.id = id;
 		this.rentalCode = rentalCode;
@@ -45,7 +41,7 @@ public class BookRental implements IBookRental
 		this.state = state;
 	}
 	
-	private BookRental(String userId, Book book, LocalDate startingDate, String state)
+	public DeletedBookRental(UUID rentalCode,String userId, DeletedBook book, LocalDate startingDate, String state)
 	{
 		this.userId = userId;
 		this.book = book;
@@ -53,66 +49,45 @@ public class BookRental implements IBookRental
 		this.state = state;
 	}
 	
-	public DeletedBookRental getTransientDeletedBookRental(DeletedBook savedDeletedBook)
-	{
-		return new DeletedBookRental(this.rentalCode, this.userId, savedDeletedBook, this.startingDate, DELETED);
-	}
-	
-	public BookRental()
+	public DeletedBookRental()
 	{
 	}
 	
-	public static BookRental createTransientForNewRental(String userId, Book book)
-	{
-		return new BookRental(userId, book, LocalDate.now(), RENTED);
-	}
-	
-	@Override
 	public Long getId()
 	{
 		return id;
 	}
 	
-	@Override
 	public String getUserId()
 	{
 		return userId;
 	}
 	
-	public Book getBook()
+	public DeletedBook getBook()
 	{
 		return book;
 	}
-	
-	public void completeRenting()
-	{
-		this.endingDate = LocalDate.now();
-		this.state = COMPLETED;
-	}
-	
-	@Override
+
 	public LocalDate getStartingDate()
 	{
 		return startingDate;
 	}
 	
-	@Override
 	public LocalDate getEndingDate()
 	{
 		return endingDate;
 	}
 	
-	@Override
 	public String getState()
 	{
 		return state;
 	}
 	
-	@Override
 	public UUID getRentalCode()
 	{
 		return rentalCode;
 	}
+	
 	
 	@Override
 	public String getBookIsbn()
@@ -131,4 +106,5 @@ public class BookRental implements IBookRental
 	{
 		return this.getBook().getAuthor().getFullName();
 	}
+	
 }

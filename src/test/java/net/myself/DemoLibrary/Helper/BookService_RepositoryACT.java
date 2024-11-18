@@ -16,23 +16,23 @@ public class BookService_RepositoryACT
 	{
 		if(serviceResult == ServiceResult.OK)
 		{
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(isbn)).thenReturn(true);
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(newIsbn)).thenReturn(false);
-			when(bookRepositoryMock.findByIsbnAndDeletedFalse(isbn)).thenReturn(Optional.of(new Book(bookId, "", new Author(), isbn, LocalDate.now())));
+			when(bookRepositoryMock.existsByIsbn(isbn)).thenReturn(true);
+			when(bookRepositoryMock.existsByIsbn(newIsbn)).thenReturn(false);
+			when(bookRepositoryMock.findByIsbn(isbn)).thenReturn(Optional.of(new Book(bookId, "", new Author(), isbn, LocalDate.now())));
 			when(bookRepositoryMock.updateIsbnById(bookId, newIsbn)).thenReturn(1);
 		}
 		else if(serviceResult == ServiceResult.NOT_FOUND)
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(isbn)).thenReturn(false);
+			when(bookRepositoryMock.existsByIsbn(isbn)).thenReturn(false);
 		else if(serviceResult == ServiceResult.CONFLICT)
 		{
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(isbn)).thenReturn(true);
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(newIsbn)).thenReturn(true);
+			when(bookRepositoryMock.existsByIsbn(isbn)).thenReturn(true);
+			when(bookRepositoryMock.existsByIsbn(newIsbn)).thenReturn(true);
 		}
 		else if(serviceResult == ServiceResult.SERVER_ERROR)
 		{
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(isbn)).thenReturn(true);
-			when(bookRepositoryMock.existsByIsbnAndDeletedFalse(newIsbn)).thenReturn(false);
-			when(bookRepositoryMock.findByIsbnAndDeletedFalse(isbn)).thenReturn(Optional.of(new Book(bookId, "", new Author(), isbn, LocalDate.now())));
+			when(bookRepositoryMock.existsByIsbn(isbn)).thenReturn(true);
+			when(bookRepositoryMock.existsByIsbn(newIsbn)).thenReturn(false);
+			when(bookRepositoryMock.findByIsbn(isbn)).thenReturn(Optional.of(new Book(bookId, "", new Author(), isbn, LocalDate.now())));
 			when(bookRepositoryMock.updateIsbnById(bookId, newIsbn)).thenReturn(-1);
 		}
 	}

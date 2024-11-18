@@ -3,6 +3,8 @@ package net.myself.DemoLibrary.Data.NTO;
 import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import net.myself.DemoLibrary.Data.Entities.BookRental;
+import net.myself.DemoLibrary.Data.Entities.IBook;
+import net.myself.DemoLibrary.Data.Entities.IBookRental;
 
 import java.time.LocalDate;
 
@@ -15,9 +17,8 @@ public record BookRentalNto(
                             LocalDate startDate,
                             LocalDate endDate)
 {
-	public static BookRentalNto createFrom(BookRental saved)
+	public static BookRentalNto createFrom(IBookRental saved)
 	{
-		Book book = saved.getBook();
-		return new BookRentalNto(saved.getRentalCode(), book.getIsbn(), book.getTitle(), book.getAuthor().getFullName(), saved.getState(), saved.getStartingDate(), saved.getEndingDate());
+		return new BookRentalNto(saved.getRentalCode(), saved.getBookIsbn(), saved.getBookTitle(), saved.getAuthorName(), saved.getState(), saved.getStartingDate(), saved.getEndingDate());
 	}
 }
