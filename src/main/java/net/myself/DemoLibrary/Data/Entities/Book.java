@@ -4,10 +4,11 @@ import net.myself.DemoLibrary.Model.BookUpdate;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
 import org.hibernate.annotations.Formula;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-public class Book implements IBook
+public class Book implements IBook, Serializable
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,7 +2,9 @@ package net.myself.DemoLibrary.Service;
 
 import org.apache.logging.log4j.util.Strings;
 
-public class ServiceResponse<T>
+import java.io.Serializable;
+
+public class ServiceResponse<T> implements Serializable
 {
 	private final T objectResult;
 	private final ServiceResult result;

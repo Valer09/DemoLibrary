@@ -3,11 +3,12 @@ import jakarta.persistence.*;
 import net.myself.DemoLibrary.Data.NTO.AuthorNto;
 import net.myself.DemoLibrary.Model.AuthorUpdate;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-public class Author
+public class Author implements Serializable
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

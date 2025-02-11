@@ -16,6 +16,7 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -41,7 +42,8 @@ public class BookService
 	
 	@Autowired
 	private IDeletedBookRentalRepository _deletedBookRentalRepository;
-	
+
+	@Cacheable(value = "books")
 	public List<BookNto> getAllBooksNto()
 	{
 		return bookRepository.findAll().stream().map(BookNto::fromBook).collect(Collectors.toList());
@@ -61,7 +63,8 @@ public class BookService
 	{
 		return bookRepository.findByTitleContainingIgnoreCase(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
-	
+
+	@Cacheable(value = "books", key = "#book.isbn")
 	@Transactional
 	public ServiceResponse<BookNto> addBookFromNto(BookNto book)
 	{

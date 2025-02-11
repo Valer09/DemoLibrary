@@ -5,9 +5,10 @@ import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.Entities.Book;
 import org.antlr.v4.runtime.misc.NotNull;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
-public record BookNto(
+public record BookNto (
 				@Size(min = 1, max = 40)
 				String title,
 				@Size(min = 13, max = 13)
@@ -19,7 +20,7 @@ public record BookNto(
 				@PastOrPresent
 				LocalDate publishedDate,
 				String state,
-				@JsonIgnore AuthorNto authorNto)
+				@JsonIgnore AuthorNto authorNto)  implements Serializable
 {
 	public static BookNto fromBook(Book book)
 	{
