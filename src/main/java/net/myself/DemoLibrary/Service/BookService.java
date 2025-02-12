@@ -16,7 +16,10 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -25,11 +28,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static net.myself.DemoLibrary.Data.Entities.BookRental.RENTED;
+import static net.myself.DemoLibrary.Infrastructure.Configuration.RedisConfiguration.BOOK_CACHE;
 
 @Service
 public class BookService
 {
 	private static final Logger _logger = LoggerFactory.getLogger(GlobalControllerExceptionHandler.class);
+	private static final String BOOKS_ALL = "'all'";
 	@Autowired
 	IBookRepository bookRepository;
 	@Autowired
@@ -43,28 +48,32 @@ public class BookService
 	@Autowired
 	private IDeletedBookRentalRepository _deletedBookRentalRepository;
 
-	@Cacheable(value = "books")
+	@Autowired
+	private CacheManager cacheManager;
+
+	@Cacheable(value = BOOK_CACHE, key = BOOKS_ALL)
 	public List<BookNto> getAllBooksNto()
 	{
 		return bookRepository.findAll().stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
-	
+
 	public Optional<BookNto> findByIsbnNto(String isbn)
 	{
 		return bookRepository.findByIsbn(isbn).map(BookNto::fromBook);
 	}
-	
+
+	@Cacheable(value = BOOK_CACHE, key = "#title")
 	public List<BookNto> findByTitleNto(String title)
 	{
 		return bookRepository.findByTitle(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
-	
+	@Cacheable(value = BOOK_CACHE, key = "#title")
 	public List<BookNto> findByTitleContainingIgnoreCaseNto(String title)
 	{
 		return bookRepository.findByTitleContainingIgnoreCase(title).stream().map(BookNto::fromBook).collect(Collectors.toList());
 	}
 
-	@Cacheable(value = "books", key = "#book.isbn")
+	@CacheEvict(value = BOOK_CACHE, key = BOOKS_ALL) // Invalida la lista
 	@Transactional
 	public ServiceResponse<BookNto> addBookFromNto(BookNto book)
 	{
@@ -77,11 +86,12 @@ public class BookService
 		
 		Book transientBook = Book.createTransientBook(book, authorByCf);
 		Book save = bookRepository.save(transientBook);
-		
+
 		return ServiceResponse.createOk(BookNto.fromBook(save));
 		
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
 	public ServiceResponse<String> deleteBookByIsbn(String isbn)
 	{
@@ -113,7 +123,8 @@ public class BookService
 		_logger.trace("deleted object book with isbn "+isbn);
 		return ServiceResponse.createOk("Book deleted successfully");
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
 	public ServiceResponse<BookNto> updateBookFromNto(BookUpdateNto bookUpdateNto)
 	{
@@ -133,10 +144,12 @@ public class BookService
 		var saved = bookRepository.save(book.get());
 		
 		_logger.trace(MessageFormat.format("Book with id %d updated", +saved.getId()));
-		
-		return ServiceResponse.createOk(BookNto.fromBook(saved));
+		BookNto updatedBookNto = BookNto.fromBook(saved);
+
+		cacheManager.getCache(BOOK_CACHE).put(bookUpdateNto.isbn(), updatedBookNto);
+		return ServiceResponse.createOk(updatedBookNto);
 	}
-	
+
 	/**
 	 * <b>WARNING:</b>
 	 * It is intended to be used internally within this layer, especially for communication with the Data layer.
@@ -144,6 +157,7 @@ public class BookService
 	 * The method will only be visible externally for testing purposes.
 	 * </p>
 	 */
+	@CacheEvict(value = BOOK_CACHE, allEntries = true) // Invalida la lista
 	@VisibleForTesting
 	@Transactional
 	public ServiceResponse<String> deleteBookById(Long id)
@@ -153,7 +167,8 @@ public class BookService
 		_logger.trace("deleted object book with id "+id);
 		return ServiceResponse.createOk("Book deleted successfully");
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	public ServiceResponse<Integer> updateIsbn(String isbn, String newIsbn)
 	{
 		if(!bookRepository.existsByIsbn(isbn)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Book not found");
@@ -162,10 +177,14 @@ public class BookService
 		
 		var result = bookRepository.updateIsbnById(book.get().getId(), newIsbn);
 		if(result != 1) return ServiceResponse.createError(ServiceResult.SERVER_ERROR, "Internal Server Error");
-		
+
+		// Aggiorna la cache SOLO dopo il successo dell'update
+		var updatedBook = bookRepository.findByIsbn(newIsbn); // Recupera il libro aggiornato
+
 		return ServiceResponse.createOk(result);
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
 	public ServiceResponse<BookRentalNto> rentBook(String userIdFromToken, BookRentalNto bookRentalNto)
 	{
@@ -186,7 +205,7 @@ public class BookService
 		
 		return ServiceResponse.createOk(BookRentalNto.createFrom(saved));
 	}
-	
+
 	public ServiceResponse<List<BookRentalNto>> getAllRentals(String userIdFromToken)
 	{
 		
@@ -198,9 +217,10 @@ public class BookService
 		
 		return ServiceResponse.createOk(rentals.stream().map(BookRentalNto::createFrom).toList());
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
-	public ServiceResponse<BookRentalNto> completeRenting(String userIdFromToken, String isbn)
+	public ServiceResponse<BookRentalNto> completeRenting(String isbn)
 	{
 		var book = bookRepository.findByIsbn(isbn);
 		if(book.isEmpty()) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "book not found");
@@ -217,7 +237,7 @@ public class BookService
 		
 		return ServiceResponse.createOk(BookRentalNto.createFrom(bookRental));
 	}
-	
+
 	public ServiceResponse<List<BookNto>> findByAuthor(String isni)
 	{
 		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");

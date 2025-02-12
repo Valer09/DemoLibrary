@@ -3,9 +3,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import net.myself.DemoLibrary.Data.Entities.Book;
-import org.antlr.v4.runtime.misc.NotNull;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 
 public record BookNto (
@@ -20,7 +18,7 @@ public record BookNto (
 				@PastOrPresent
 				LocalDate publishedDate,
 				String state,
-				@JsonIgnore AuthorNto authorNto)  implements Serializable
+				@JsonIgnore AuthorNto authorNto)
 {
 	public static BookNto fromBook(Book book)
 	{

@@ -1,8 +1,5 @@
 package net.myself.DemoLibrary.Service;
-
-import java.io.Serializable;
-
-public enum ServiceResult implements Serializable
+public enum ServiceResult
 {
 	OK, NOT_FOUND, SERVER_ERROR, CONFLICT
 }

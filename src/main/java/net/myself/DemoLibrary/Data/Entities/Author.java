@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-public class Author implements Serializable
+public class Author
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

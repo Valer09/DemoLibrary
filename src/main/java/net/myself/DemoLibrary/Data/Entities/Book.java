@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-public class Book implements IBook, Serializable
+public class Book implements IBook
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

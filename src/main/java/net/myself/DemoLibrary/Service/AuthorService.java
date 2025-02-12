@@ -7,9 +7,13 @@ import net.myself.DemoLibrary.Data.NTO.AuthorUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IAuthorRepository;
 import net.myself.DemoLibrary.Model.AuthorUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static net.myself.DemoLibrary.Infrastructure.Configuration.RedisConfiguration.BOOK_CACHE;
 
 @Service
 public class AuthorService
@@ -47,7 +51,8 @@ public class AuthorService
 						.map(ServiceResponse::createOk)
 						.orElse(ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found"));
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
 	public ServiceResponse<AuthorNto> updateAuthorFromNto(AuthorUpdateNto authorUpdateNto)
 	{
@@ -61,7 +66,8 @@ public class AuthorService
 		return ServiceResponse.createOk(AuthorNto.fromAuthor(authorRepository.save(author.get())));
 		
 	}
-	
+
+	@CacheEvict(value = BOOK_CACHE, allEntries = true)
 	@Transactional
 	public ServiceResponse<Integer> updateIsni(String isni, String newIsni)
 	{

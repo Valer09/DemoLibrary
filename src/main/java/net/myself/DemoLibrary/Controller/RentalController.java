@@ -61,7 +61,7 @@ public class RentalController
 	public ResponseEntity<BookRentalNto> completeRenting(@RequestParam @Size(min = 13, max = 13) String isbn)
 	{
 		String userIdFromToken = userService.getUserIdFromToken();
-		var serviceResponse = bookService.completeRenting(userIdFromToken, isbn);
+		var serviceResponse = bookService.completeRenting(isbn);
 		return switch(serviceResponse.getResult())
 						{
 							case OK -> new ResponseEntity<>(serviceResponse.get(), HttpStatus.OK);
@@ -96,9 +96,9 @@ public class RentalController
 	
 	@PreAuthorize("hasRole('Admin')")
 	@PutMapping("/admin/completeRentingToUser")
-	public ResponseEntity<BookRentalNto> completeRentingToUser(@RequestParam @Size(min = 13, max = 13) String isbn, @RequestParam String userId)
+	public ResponseEntity<BookRentalNto> completeRentingToUser(@RequestParam @Size(min = 13, max = 13) String isbn)
 	{
-		var serviceResponse = bookService.completeRenting(addOauthPrefix(userId), isbn);
+		var serviceResponse = bookService.completeRenting(isbn);
 		return switch(serviceResponse.getResult())
 						{
 							case OK -> new ResponseEntity<>(serviceResponse.get(), HttpStatus.OK);
