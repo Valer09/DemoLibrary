@@ -1,0 +1,15 @@
+
+
+type Query {
+    booksByAuthor(isni: String!): [BookNto!]!
+}
+
+type BookNto {
+    title: String
+    isbn: String
+    author: String
+    authorIsni: String
+    publishedDate: String
+    state: String
+    }
+
