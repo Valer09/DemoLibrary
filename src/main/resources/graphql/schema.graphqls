@@ -11,5 +11,12 @@ type BookNto {
     authorIsni: String
     publishedDate: String
     state: String
+    authorNto: AuthorNto
     }
 
+type AuthorNto {
+    isni : String,
+    name : String
+    lastName : String
+    birth : String
+    }
