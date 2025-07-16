@@ -33,4 +33,7 @@ public interface IBookRepository extends JpaRepository<Book, Long>
 	int updateIsbnById(@Positive long bookId, @Size(min = 13, max = 13)String newIsbn);
 	
 	List<Book> findByAuthor(Author author);
+
+	//@Query("SELECT b FROM Book b Where b.author.id = :bookId")
+	List<Book> findByAuthorId(Long authorId);
 }

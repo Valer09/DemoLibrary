@@ -3,6 +3,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import net.myself.DemoLibrary.Data.Entities.*;
 import net.myself.DemoLibrary.Data.NTO.BookNto;
+import net.myself.DemoLibrary.Data.NTO.BookNtoQl;
 import net.myself.DemoLibrary.Data.NTO.BookRentalNto;
 import net.myself.DemoLibrary.Data.NTO.BookUpdateNto;
 import net.myself.DemoLibrary.Data.Repository.IBookRentalRepository;
@@ -220,6 +221,13 @@ public class BookService
 		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
 		var author = authorService.findAuthorByIsni(isni).get();
 		return ServiceResponse.createOk(bookRepository.findByAuthor(author).stream().map(BookNto::fromBook).toList());
+	}
+
+	public ServiceResponse<List<BookNtoQl>> findByAuthorGql(String isni)
+	{
+		if(!authorService.existsByIsni(isni)) return ServiceResponse.createError(ServiceResult.NOT_FOUND, "Author not found");
+		var id = authorService.findAuthorByIsni(isni).get().getId();
+		return ServiceResponse.createOk(bookRepository.findByAuthorId(id).stream().map(BookNtoQl::fromBook).toList());
 	}
 	
 	public boolean isRented(String isbn)

@@ -1,10 +1,11 @@
 
+#NOTE: THE LOGIC BEHIND THIS SCHEME, FROM CONTROLLER DOWN TO REPOSITORIES, LEADS TO N+1 PROBLEM. THIS IS JUST AN EXPERIMENTAION. THE REAL SOLUTION SHOULD USE DATALOADER
 
 type Query {
-    booksByAuthor(isni: String!): [BookNto!]!
+    booksByAuthor(isni: String!): [BookNtoQl!]!
 }
 
-type BookNto {
+type BookNtoQl {
     title: String
     isbn: String
     author: String
