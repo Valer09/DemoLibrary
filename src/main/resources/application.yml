@@ -11,13 +11,10 @@ spring:
       dialect: org.hibernate.dialect.SQLServerDialect
       ddl-auto: update
     show-sql: true
-  security:
-    oauth2:
-      resource-server:
-        jwt:
-          audiences:
-            - ${JWT_AUDIENCE}
-          issuer-uri: ${JWT_ISSUER_URL}
 
-
-
+auth0:
+  domain: ${AUTH0_DOMAIN}
+  token-url: ${AUTH0_TOKEN_URL}
+  client-id: ${AUTH0_CLIENT_ID}
+  client-secret: ${AUTH0_CLIENT_SECRET}
+  audience: ${AUTH0_AUDIENCE}
