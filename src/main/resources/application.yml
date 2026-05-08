@@ -1,11 +1,23 @@
 spring:
   application:
     name: DemoLibrary
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
+  jpa:
+    hibernate:
+      dialect: org.hibernate.dialect.SQLServerDialect
+      ddl-auto: update
+    show-sql: true
   security:
     oauth2:
       resource-server:
         jwt:
           audiences:
-            - https://DemoLibraryAuthApi
-          issuer-uri: https://dev-ijzwld8inlw3zyy2.eu.auth0.com/
+            - ${JWT_AUDIENCE}
+          issuer-uri: ${JWT_ISSUER_URL}
+
+
+
